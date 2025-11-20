@@ -133,6 +133,7 @@ export const WizardOverlay: React.FC<WizardOverlayProps> = ({
                     justify-content: center;
                     z-index: 1000;
                     animation: fadeIn 0.4s ease-out;
+                    padding: 16px;
                 }
 
                 @keyframes fadeIn {
@@ -142,19 +143,28 @@ export const WizardOverlay: React.FC<WizardOverlayProps> = ({
 
                 .wizard-close {
                     position: absolute;
-                    top: 20px;
-                    right: 20px;
+                    top: 12px;
+                    right: 12px;
                     background: rgba(255, 255, 255, 0.1);
                     border: none;
                     border-radius: 50%;
-                    width: 44px;
-                    height: 44px;
+                    width: 40px;
+                    height: 40px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
                     color: white;
                     transition: background 0.2s;
+                }
+
+                @media (min-width: 768px) {
+                    .wizard-close {
+                        top: 20px;
+                        right: 20px;
+                        width: 44px;
+                        height: 44px;
+                    }
                 }
 
                 .wizard-close:hover {
@@ -179,10 +189,16 @@ export const WizardOverlay: React.FC<WizardOverlayProps> = ({
                 .wizard-content {
                     width: 100%;
                     max-width: 600px;
-                    padding: 20px;
+                    padding: 12px;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
+                }
+
+                @media (min-width: 768px) {
+                    .wizard-content {
+                        padding: 20px;
+                    }
                 }
 
                 .wizard-step {

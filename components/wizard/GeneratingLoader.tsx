@@ -28,13 +28,26 @@ export const GeneratingLoader: React.FC = () => {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 24px;
+                    gap: 16px;
+                }
+
+                @media (min-width: 768px) {
+                    .generating-loader {
+                        gap: 24px;
+                    }
                 }
 
                 .loader-spinner {
-                    width: 60px;
-                    height: 60px;
+                    width: 50px;
+                    height: 50px;
                     color: #10B981;
+                }
+
+                @media (min-width: 768px) {
+                    .loader-spinner {
+                        width: 60px;
+                        height: 60px;
+                    }
                 }
 
                 .loader-spinner svg {
@@ -67,10 +80,16 @@ export const GeneratingLoader: React.FC = () => {
                 }
 
                 .loader-text {
-                    font-size: 24px;
+                    font-size: 18px;
                     font-weight: 600;
                     color: white;
                     margin: 0;
+                }
+
+                @media (min-width: 768px) {
+                    .loader-text {
+                        font-size: 24px;
+                    }
                 }
 
                 .dots::after {
@@ -87,9 +106,15 @@ export const GeneratingLoader: React.FC = () => {
                 }
 
                 .loader-subtext {
-                    font-size: 14px;
+                    font-size: 12px;
                     color: rgba(255, 255, 255, 0.6);
                     margin: 0;
+                }
+
+                @media (min-width: 768px) {
+                    .loader-subtext {
+                        font-size: 14px;
+                    }
                 }
             `}</style>
         </div>

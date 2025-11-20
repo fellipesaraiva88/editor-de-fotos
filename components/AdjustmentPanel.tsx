@@ -41,16 +41,16 @@ const AdjustmentPanel: React.FC<AdjustmentPanelProps> = ({ onApplyAdjustment, is
   };
 
   return (
-    <div className="w-full flex flex-col gap-4 p-2">
-      <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider text-center">Ajustes Profissionais</h3>
-      
-      <div className="grid grid-cols-2 gap-2">
+    <div className="w-full flex flex-col gap-3 md:gap-4 p-1 md:p-2">
+      <h3 className="text-xs md:text-sm font-semibold text-neutral-400 uppercase tracking-wider text-center">Ajustes Profissionais</h3>
+
+      <div className="grid grid-cols-2 gap-1.5 md:gap-2">
         {presets.map(preset => (
           <button
             key={preset.name}
             onClick={() => handlePresetClick(preset.prompt)}
             disabled={isLoading}
-            className={`w-full text-center bg-neutral-800 border border-transparent text-neutral-300 font-medium py-3 px-2 rounded-lg transition-all hover:bg-neutral-700 active:scale-95 text-sm ${selectedPresetPrompt === preset.prompt ? 'border-white text-white bg-neutral-700' : ''}`}
+            className={`w-full text-center bg-neutral-800 border border-transparent text-neutral-300 font-medium py-2.5 md:py-3 px-2 rounded-lg transition-all hover:bg-neutral-700 active:scale-95 text-xs md:text-sm ${selectedPresetPrompt === preset.prompt ? 'border-white text-white bg-neutral-700' : ''}`}
           >
             {preset.name}
           </button>
@@ -63,7 +63,7 @@ const AdjustmentPanel: React.FC<AdjustmentPanelProps> = ({ onApplyAdjustment, is
             value={customPrompt}
             onChange={handleCustomChange}
             placeholder="Ou digite seu ajuste..."
-            className="flex-grow bg-neutral-900 border border-neutral-700 text-white rounded-lg p-3 focus:border-neutral-500 focus:outline-none transition text-sm"
+            className="flex-grow bg-neutral-900 border border-neutral-700 text-white rounded-lg p-2.5 md:p-3 focus:border-neutral-500 focus:outline-none transition text-xs md:text-sm"
             disabled={isLoading}
         />
       </div>
@@ -71,7 +71,7 @@ const AdjustmentPanel: React.FC<AdjustmentPanelProps> = ({ onApplyAdjustment, is
       {activePrompt && (
         <button
             onClick={handleApply}
-            className="w-full btn-instagram text-white font-bold py-3 px-6 rounded-lg transition-transform active:scale-95 disabled:opacity-50 mt-2"
+            className="w-full btn-instagram text-white font-bold py-2.5 md:py-3 px-4 md:px-6 rounded-lg transition-transform active:scale-95 disabled:opacity-50 mt-1 md:mt-2 text-xs md:text-sm"
             disabled={isLoading || !activePrompt.trim()}
         >
             Aplicar Ajuste

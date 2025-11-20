@@ -343,20 +343,22 @@ const App: React.FC = () => {
   };
 
   const renderSidebar = () => (
-    <div className="w-[400px] flex flex-col border-l border-neutral-800 bg-neutral-900 flex-shrink-0 z-20 shadow-2xl">
+    <div className="w-full md:w-[400px] flex flex-col border-t md:border-t-0 md:border-l border-neutral-800 bg-neutral-900 flex-shrink-0 z-20 shadow-2xl max-h-[60vh] md:max-h-none">
         {/* Sidebar Header */}
-        <div className="p-6 border-b border-neutral-800 flex flex-col items-center">
-             <Header />
-             
+        <div className="p-4 md:p-6 border-b border-neutral-800 flex flex-col items-center">
+             <div className="hidden md:block">
+                <Header />
+             </div>
+
              {/* Tabs */}
-             <div className="flex w-full bg-neutral-800 rounded-xl p-1 mt-6">
+             <div className="flex w-full bg-neutral-800 rounded-xl p-1 md:mt-6">
                 {(['retouch', 'crop', 'adjust', 'filters'] as Tab[]).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all ${
-                            activeTab === tab 
-                            ? 'bg-white text-black shadow-sm' 
+                        className={`flex-1 flex items-center justify-center py-2.5 md:py-2 rounded-lg text-[10px] md:text-xs font-bold transition-all ${
+                            activeTab === tab
+                            ? 'bg-white text-black shadow-sm'
                             : 'text-neutral-400 hover:text-white hover:bg-neutral-700'
                         }`}
                     >
@@ -370,7 +372,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
             
             {error && (
                  <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-200 px-4 py-3 rounded-lg text-xs flex justify-between items-center">
@@ -398,15 +400,15 @@ const App: React.FC = () => {
                                 ))}
                             </div>
                         ) : aiSuggestions.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-1.5 md:gap-2">
                                 {aiSuggestions.map((suggestion, idx) => (
-                                    <button 
+                                    <button
                                         key={idx}
                                         onClick={() => setPrompt(suggestion.prompt)}
-                                        className="text-left px-3 py-2 bg-neutral-800/50 border border-pink-500/30 hover:bg-neutral-800 hover:border-pink-500 rounded-lg transition-all active:scale-95 group"
+                                        className="text-left px-2 md:px-3 py-2 bg-neutral-800/50 border border-pink-500/30 hover:bg-neutral-800 hover:border-pink-500 rounded-lg transition-all active:scale-95 group"
                                     >
-                                        <span className="text-lg mr-2">{suggestion.emoji}</span>
-                                        <span className="text-xs font-semibold text-neutral-200 group-hover:text-white">{suggestion.label}</span>
+                                        <span className="text-base md:text-lg mr-1 md:mr-2">{suggestion.emoji}</span>
+                                        <span className="text-[10px] md:text-xs font-semibold text-neutral-200 group-hover:text-white">{suggestion.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -427,35 +429,35 @@ const App: React.FC = () => {
                         </div>
 
                         {/* Studio Sub-Tabs */}
-                        <div className="flex gap-2 mb-4 overflow-x-auto pb-2 no-scrollbar">
-                            <button onClick={() => setStudioTab('places')} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all whitespace-nowrap ${studioTab === 'places' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}>
+                        <div className="flex gap-1.5 md:gap-2 mb-3 md:mb-4 overflow-x-auto pb-2 no-scrollbar">
+                            <button onClick={() => setStudioTab('places')} className={`px-3 md:px-4 py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all whitespace-nowrap ${studioTab === 'places' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}>
                                 🌍 Cenários
                             </button>
-                            <button onClick={() => setStudioTab('outfits')} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all whitespace-nowrap ${studioTab === 'outfits' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}>
+                            <button onClick={() => setStudioTab('outfits')} className={`px-3 md:px-4 py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all whitespace-nowrap ${studioTab === 'outfits' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}>
                                 👕 Roupas
                             </button>
-                            <button onClick={() => setStudioTab('vehicles')} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all whitespace-nowrap ${studioTab === 'vehicles' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}>
+                            <button onClick={() => setStudioTab('vehicles')} className={`px-3 md:px-4 py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all whitespace-nowrap ${studioTab === 'vehicles' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}>
                                 🏎️ Veículos
                             </button>
                         </div>
 
                         {/* Visual Grid */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-3 md:grid-cols-2 gap-2 md:gap-3">
                             {studioAssets[studioTab].map((asset) => (
-                                <button 
+                                <button
                                     key={asset.id}
                                     onClick={() => addToPrompt(asset.prompt)}
-                                    className="group relative flex flex-col items-center justify-center bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-white/40 rounded-xl p-4 transition-all active:scale-95 h-24"
+                                    className="group relative flex flex-col items-center justify-center bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-white/40 rounded-xl p-2 md:p-4 transition-all active:scale-95 h-20 md:h-24"
                                 >
-                                    <div className="text-3xl mb-2 group-hover:scale-110 transition-transform filter drop-shadow-lg">
+                                    <div className="text-xl md:text-3xl mb-1 md:mb-2 group-hover:scale-110 transition-transform filter drop-shadow-lg">
                                         {asset.emoji}
                                     </div>
-                                    <span className="text-xs font-bold text-neutral-300 group-hover:text-white text-center">
+                                    <span className="text-[9px] md:text-xs font-bold text-neutral-300 group-hover:text-white text-center leading-tight">
                                         {asset.label}
                                     </span>
                                     {/* Selection Indicator if prompt contains part of text (simple check) */}
                                     {prompt.includes(asset.label.split(' ')[0]) && (
-                                        <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full shadow-glow"></div>
+                                        <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 w-2 h-2 bg-green-500 rounded-full shadow-glow"></div>
                                     )}
                                 </button>
                             ))}
@@ -463,23 +465,23 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Prompt Input Area */}
-                    <div className="mt-2 pt-4 border-t border-neutral-800">
-                        <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 block">
+                    <div className="mt-2 pt-3 md:pt-4 border-t border-neutral-800">
+                        <label className="text-[10px] md:text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 block">
                            Seu Prompt (Editável)
                         </label>
-                        <form onSubmit={(e) => { e.preventDefault(); handleGenerate(); }} className="flex flex-col gap-3">
-                            <textarea 
+                        <form onSubmit={(e) => { e.preventDefault(); handleGenerate(); }} className="flex flex-col gap-2 md:gap-3">
+                            <textarea
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
                                 placeholder={editHotspot ? "Comando pronto. Clique em Gerar." : "Toque na imagem ou clique num card acima..."}
                                 disabled={isLoading}
-                                rows={3}
-                                className="w-full bg-neutral-800 border border-neutral-700 text-white rounded-xl p-4 text-sm focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 outline-none resize-none transition-all disabled:opacity-50"
+                                rows={2}
+                                className="w-full bg-neutral-800 border border-neutral-700 text-white rounded-xl p-3 md:p-4 text-xs md:text-sm focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 outline-none resize-none transition-all disabled:opacity-50"
                             />
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 disabled={isLoading || !prompt.trim()}
-                                className="w-full btn-instagram text-white font-bold rounded-xl py-3 text-sm shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
+                                className="w-full btn-instagram text-white font-bold rounded-xl py-2.5 md:py-3 text-xs md:text-sm shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
                             >
                                 {isLoading ? <span className="animate-pulse">Transformando...</span> : <> <MagicWandIcon className="w-4 h-4"/> Gerar Transformação </>}
                             </button>
@@ -502,35 +504,35 @@ const App: React.FC = () => {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-neutral-800 bg-neutral-900 flex flex-col gap-3">
+        <div className="p-3 md:p-4 border-t border-neutral-800 bg-neutral-900 flex flex-col gap-2 md:gap-3">
              <div className="flex items-center justify-between gap-2">
-                <div className="flex gap-2">
-                    <button onClick={handleUndo} disabled={!canUndo} className="p-3 rounded-lg bg-neutral-800 text-white hover:bg-neutral-700 disabled:opacity-30 transition-colors" title="Desfazer">
-                        <UndoIcon className="w-5 h-5" />
+                <div className="flex gap-1.5 md:gap-2">
+                    <button onClick={handleUndo} disabled={!canUndo} className="p-2.5 md:p-3 rounded-lg bg-neutral-800 text-white hover:bg-neutral-700 disabled:opacity-30 transition-colors" title="Desfazer">
+                        <UndoIcon className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
-                    <button onClick={handleRedo} disabled={!canRedo} className="p-3 rounded-lg bg-neutral-800 text-white hover:bg-neutral-700 disabled:opacity-30 transition-colors" title="Refazer">
-                        <RedoIcon className="w-5 h-5" />
+                    <button onClick={handleRedo} disabled={!canRedo} className="p-2.5 md:p-3 rounded-lg bg-neutral-800 text-white hover:bg-neutral-700 disabled:opacity-30 transition-colors" title="Refazer">
+                        <RedoIcon className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                 </div>
-                
+
                 {activeTab === 'retouch' && canUndo && (
-                     <button 
+                     <button
                         onMouseDown={() => setIsComparing(true)}
                         onMouseUp={() => setIsComparing(false)}
                         onTouchStart={() => setIsComparing(true)}
                         onTouchEnd={() => setIsComparing(false)}
-                        className="flex items-center gap-2 px-4 py-3 rounded-lg bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700 text-xs font-bold uppercase tracking-wide transition-colors"
+                        className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2.5 md:py-3 rounded-lg bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700 text-[10px] md:text-xs font-bold uppercase tracking-wide transition-colors"
                      >
-                        <EyeIcon className="w-4 h-4" /> Comparar
+                        <EyeIcon className="w-3.5 h-3.5 md:w-4 md:h-4" /> Comparar
                      </button>
                 )}
              </div>
 
-             <div className="flex gap-2 mt-2">
-                <button onClick={handleUploadNew} className="flex-1 py-3 rounded-lg bg-neutral-800 text-neutral-300 text-sm font-bold border border-neutral-700 hover:bg-neutral-700 transition-colors">
+             <div className="flex gap-2 mt-1 md:mt-2">
+                <button onClick={handleUploadNew} className="flex-1 py-2.5 md:py-3 rounded-lg bg-neutral-800 text-neutral-300 text-xs md:text-sm font-bold border border-neutral-700 hover:bg-neutral-700 transition-colors">
                     Nova Foto
                 </button>
-                <button onClick={handleDownload} className="flex-[2] py-3 rounded-lg bg-white text-black text-sm font-bold hover:bg-gray-200 transition-colors shadow-lg">
+                <button onClick={handleDownload} className="flex-[2] py-2.5 md:py-3 rounded-lg bg-white text-black text-xs md:text-sm font-bold hover:bg-gray-200 transition-colors shadow-lg">
                     Salvar Imagem
                 </button>
              </div>
@@ -549,33 +551,38 @@ const App: React.FC = () => {
           />
         )}
         {currentImageUrl ? (
-             <div className="flex h-screen bg-black overflow-hidden font-sans">
+             <div className="flex flex-col md:flex-row h-screen bg-black overflow-hidden font-sans">
+
+                {/* Mobile Header */}
+                <div className="md:hidden p-3 border-b border-neutral-800 bg-neutral-900 flex items-center justify-center">
+                    <Header />
+                </div>
 
                 {/* Left Column: Canvas */}
-                <div className="flex-1 relative flex items-center justify-center bg-neutral-950 p-8 overflow-hidden">
+                <div className="flex-1 relative flex items-center justify-center bg-neutral-950 p-2 md:p-8 overflow-hidden min-h-[40vh] md:min-h-0">
                      {/* Background Grid Pattern for professionalism */}
                      <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(#333 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-                     
+
                      {/* Loading Overlay (Centered on Canvas) */}
                      {isLoading && (
                         <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center">
                             <Spinner />
-                            <p className="text-white/80 mt-4 text-sm font-medium animate-pulse">Processando com IA...</p>
+                            <p className="text-white/80 mt-4 text-xs md:text-sm font-medium animate-pulse">Processando com IA...</p>
                         </div>
                      )}
 
                      <div className="relative max-w-full max-h-full shadow-2xl">
                         {activeTab === 'crop' ? (
-                            <ReactCrop crop={crop} onChange={c => setCrop(c)} onComplete={c => setCompletedCrop(c)} aspect={aspect} className="max-h-[85vh]">
-                                <img src={currentImageUrl} alt="Crop" className="max-h-[85vh] w-auto object-contain" />
+                            <ReactCrop crop={crop} onChange={c => setCrop(c)} onComplete={c => setCompletedCrop(c)} aspect={aspect} className="max-h-[35vh] md:max-h-[85vh]">
+                                <img src={currentImageUrl} alt="Crop" className="max-h-[35vh] md:max-h-[85vh] w-auto object-contain" />
                             </ReactCrop>
                         ) : (
                             <>
                                 {/* Original Layer for Compare */}
                                 {originalImageUrl && (
-                                     <img 
-                                        src={originalImageUrl} 
-                                        className={`absolute inset-0 w-full h-full object-contain z-20 transition-opacity duration-200 ${isComparing ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+                                     <img
+                                        src={originalImageUrl}
+                                        className={`absolute inset-0 w-full h-full object-contain z-20 transition-opacity duration-200 ${isComparing ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                                         alt="Original"
                                     />
                                 )}
@@ -585,13 +592,13 @@ const App: React.FC = () => {
                                     src={currentImageUrl}
                                     alt="Current"
                                     onClick={handleImageClick}
-                                    className={`max-h-[85vh] w-auto object-contain transition-all duration-200 ${editHotspot ? 'cursor-crosshair' : 'cursor-pointer'}`}
+                                    className={`max-h-[35vh] md:max-h-[85vh] w-auto object-contain transition-all duration-200 ${editHotspot ? 'cursor-crosshair' : 'cursor-pointer'}`}
                                     style={{ boxShadow: '0 0 50px rgba(0,0,0,0.5)' }}
                                 />
-                                
+
                                 {/* Hotspot Marker */}
                                 {displayHotspot && activeTab === 'retouch' && !isLoading && (
-                                     <div 
+                                     <div
                                         className="absolute rounded-full w-4 h-4 border-2 border-white shadow-lg -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none bg-pink-500/50 backdrop-blur-sm animate-pulse"
                                         style={{ left: `${displayHotspot.x}px`, top: `${displayHotspot.y}px` }}
                                     />

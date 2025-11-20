@@ -9,11 +9,20 @@ body {
     color: #ffffff;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    /* Prevent overscroll bounce on mobile */
+    overscroll-behavior: none;
+}
+
+/* Prevent text selection on mobile for UI elements */
+.no-select {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Instagram-like gradient text for brand/accents */
 .text-gradient {
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); 
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -38,15 +47,54 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
+
+@media (min-width: 768px) {
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+}
+
 ::-webkit-scrollbar-track {
-    background: #000; 
+    background: #000;
 }
 ::-webkit-scrollbar-thumb {
-    background: #333; 
+    background: #333;
     border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #555; 
+    background: #555;
+}
+
+/* Hide scrollbar on mobile but keep functionality */
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Safe area padding for notched devices */
+@supports (padding: max(0px)) {
+    .safe-area-bottom {
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+    .safe-area-top {
+        padding-top: max(16px, env(safe-area-inset-top));
+    }
+}
+
+/* Touch-friendly button states */
+@media (hover: none) {
+    button:active {
+        transform: scale(0.98);
+    }
+}
+
+/* Smooth scrolling on mobile */
+.custom-scrollbar {
+    -webkit-overflow-scrolling: touch;
 }

@@ -75,33 +75,57 @@ export const SuggestionChips: React.FC<SuggestionChipsProps> = ({
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 24px;
+                    gap: 16px;
+                }
+
+                @media (min-width: 768px) {
+                    .suggestion-chips-container {
+                        gap: 24px;
+                    }
                 }
 
                 .suggestion-chips {
                     display: flex;
                     flex-wrap: wrap;
-                    gap: 12px;
+                    gap: 8px;
                     justify-content: center;
-                    max-width: 500px;
+                    max-width: 100%;
+                    padding: 0 8px;
+                }
+
+                @media (min-width: 768px) {
+                    .suggestion-chips {
+                        gap: 12px;
+                        max-width: 500px;
+                        padding: 0;
+                    }
                 }
 
                 .suggestion-chip {
                     display: flex;
                     align-items: center;
-                    gap: 8px;
-                    padding: 12px 16px;
+                    gap: 6px;
+                    padding: 10px 12px;
                     background: rgba(255, 255, 255, 0.08);
                     border: 1px solid rgba(255, 255, 255, 0.3);
-                    border-radius: 24px;
+                    border-radius: 20px;
                     color: white;
-                    font-size: 14px;
+                    font-size: 12px;
                     font-weight: 500;
                     cursor: pointer;
                     transition: all 0.2s ease;
                     animation: chipEnter 0.4s ease-out forwards;
                     opacity: 0;
                     transform: translateY(10px);
+                }
+
+                @media (min-width: 768px) {
+                    .suggestion-chip {
+                        gap: 8px;
+                        padding: 12px 16px;
+                        border-radius: 24px;
+                        font-size: 14px;
+                    }
                 }
 
                 @keyframes chipEnter {
@@ -124,7 +148,13 @@ export const SuggestionChips: React.FC<SuggestionChipsProps> = ({
                 }
 
                 .chip-emoji {
-                    font-size: 18px;
+                    font-size: 16px;
+                }
+
+                @media (min-width: 768px) {
+                    .chip-emoji {
+                        font-size: 18px;
+                    }
                 }
 
                 .chip-label {
@@ -133,22 +163,37 @@ export const SuggestionChips: React.FC<SuggestionChipsProps> = ({
 
                 .custom-input-form {
                     width: 100%;
-                    max-width: 400px;
+                    max-width: 100%;
                     position: relative;
                     display: flex;
                     align-items: center;
+                    padding: 0 8px;
+                }
+
+                @media (min-width: 768px) {
+                    .custom-input-form {
+                        max-width: 400px;
+                        padding: 0;
+                    }
                 }
 
                 .custom-input {
                     width: 100%;
-                    padding: 14px 50px 14px 16px;
+                    padding: 12px 44px 12px 14px;
                     background: rgba(255, 255, 255, 0.05);
                     border: 1px solid rgba(255, 255, 255, 0.2);
                     border-radius: 12px;
                     color: white;
-                    font-size: 14px;
+                    font-size: 13px;
                     outline: none;
                     transition: all 0.2s;
+                }
+
+                @media (min-width: 768px) {
+                    .custom-input {
+                        padding: 14px 50px 14px 16px;
+                        font-size: 14px;
+                    }
                 }
 
                 .custom-input::placeholder {
@@ -162,12 +207,12 @@ export const SuggestionChips: React.FC<SuggestionChipsProps> = ({
 
                 .custom-submit {
                     position: absolute;
-                    right: 8px;
+                    right: 14px;
                     background: #10B981;
                     border: none;
                     border-radius: 8px;
-                    width: 36px;
-                    height: 36px;
+                    width: 32px;
+                    height: 32px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -175,6 +220,14 @@ export const SuggestionChips: React.FC<SuggestionChipsProps> = ({
                     color: white;
                     transition: all 0.2s;
                     animation: fadeIn 0.2s ease;
+                }
+
+                @media (min-width: 768px) {
+                    .custom-submit {
+                        right: 8px;
+                        width: 36px;
+                        height: 36px;
+                    }
                 }
 
                 .custom-submit:hover {
