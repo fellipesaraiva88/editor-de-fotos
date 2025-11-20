@@ -94,6 +94,7 @@ Target Point: (${hotspot.x}, ${hotspot.y})
 1.  **FACE IS SACRED:** Do NOT regenerate the face from scratch. You must preserve the exact facial structure, nose shape, eye shape, and mouth.
 2.  **PRESERVE IMPERFECTIONS:** Keep moles, freckles, and unique skin textures. Do NOT apply a generic "smooth plastic" filter unless explicitly asked.
 3.  **EXPRESSION LOCK:** The facial expression (smile lines, eye squint, brow position) MUST remain exactly as is.
+4.  **FACIAL FIDELITY:** Keep jawline, cheekbones, hairline, beard/stubble, eyebrows, and eyewear TOTALLY consistent. No slimming, no reshaping, no generic face swap.
 
 **AUTOMOTIVE & LUXURY RULES:**
 - If a car is requested (Ferrari, Porsche, etc.), render the SPECIFIC model accurately.
