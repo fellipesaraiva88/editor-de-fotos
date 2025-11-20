@@ -1,5 +1,6 @@
 import { generateEditedImageFromBuffer } from './geminiNodeService.js';
 import { sendButtonActions, sendButtonList, sendImageMessage, sendTextMessage } from './zapiClient.js';
+import * as ResponseManager from './responseManager.js';
 
 const sessionStore = new Map();
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
@@ -46,101 +47,98 @@ const normalizePhone = (payload) => {
 const extractPrompt = (payload) => {
   const text = payload?.text?.message || '';
   const caption = payload?.image?.caption || '';
-  return (caption || text || '').trim();
+  // Also check for button replies
+  const buttonReply = payload?.buttonReply?.id || payload?.listReply?.id || '';
+
+  return (caption || text || buttonReply || '').trim();
 };
 
 const getHotspot = () => ({ x: 512, y: 512 }); // Centro padrão
 
-const isGreetingOrHelp = (text) => {
-  const normalized = text.toLowerCase();
-  return [
-    'oi',
-    'ola',
-    'olá',
-    'hey',
-    'eae',
-    'fala',
-    'bom dia',
-    'boa tarde',
-    'boa noite',
-    'menu',
-    'ajuda',
-    'como funciona',
-    'tutorial',
-  ].some((kw) => normalized.includes(kw));
+const updateSession = (phone, newBuffer, mimeType) => {
+  const session = sessionStore.get(phone);
+  if (!session) return;
+
+  // Add current state to history before updating
+  if (session.currentBuffer) {
+    session.history.push({
+      buffer: session.currentBuffer,
+      mimeType: session.currentMimeType
+    });
+    // Limit history to last 5 states to save memory
+    if (session.history.length > 5) session.history.shift();
+  }
+
+  session.currentBuffer = newBuffer;
+  session.currentMimeType = mimeType;
+  session.updatedAt = Date.now();
+  sessionStore.set(phone, session);
 };
 
-const friendlyIntro = () =>
-  [
-    'Oi! Eu sou a IA que gera/edita sua foto direto no WhatsApp 👋',
-    'Como funciona:',
-    '1) Me mande uma foto',
-    '2) Diga o que quer (ex: fundo Paris, terno azul, carro esportivo ao lado, estilo cyberpunk, filtro golden hour)',
-    '3) Eu devolvo a versão editada; pode pedir variações em seguida',
-    'Dica: uso a mesma foto por 30 minutos. Envie nova foto para reiniciar.',
-  ].join('\n');
+const undoLastEdit = (phone) => {
+  const session = sessionStore.get(phone);
+  if (!session || session.history.length === 0) return false;
 
-const sendMenuButtons = async (phone, replyTo) => {
-  const buttons = [
-    { id: 'send_photo', text: 'Enviar foto', type: 'REPLY' },
-    { id: 'ideas', text: 'Ideias de edição', type: 'REPLY' },
-    { id: 'cars', text: 'Ver carros/luxo', type: 'REPLY' },
-  ];
+  const previousState = session.history.pop();
+  session.currentBuffer = previousState.buffer;
+  session.currentMimeType = previousState.mimeType;
+  session.updatedAt = Date.now();
+  sessionStore.set(phone, session);
+  return true;
+};
 
-  try {
-    await sendButtonList(
-      phone,
-      'Escolha uma opção rápida ou mande sua mensagem:',
-      buttons
-    );
-  } catch (error) {
-    console.error('Falha ao enviar botões', error);
-    await sendTextMessage(
-      phone,
-        'Você pode: 1) Enviar foto 2) Pedir ideias 3) Pedir veículo/luxo.',
-        { messageId: replyTo }
-      );
-    }
-  };
+const resetSession = (phone) => {
+  const session = sessionStore.get(phone);
+  if (!session) return false;
+
+  // Reset to original
+  session.currentBuffer = session.originalBuffer;
+  session.currentMimeType = session.originalMimeType;
+  session.history = [];
+  session.updatedAt = Date.now();
+  sessionStore.set(phone, session);
+  return true;
+};
 
 const processEdit = async ({ phone, prompt, replyTo }) => {
   const session = sessionStore.get(phone);
   if (!session) {
-    await sendTextMessage(
-      phone,
-      'Me envie uma foto primeiro. Depois mande o texto do que deseja mudar.',
-      { messageId: replyTo }
-    );
+    await sendTextMessage(phone, ResponseManager.getSessionExpired(), { messageId: replyTo });
     return;
   }
 
   try {
-    await sendTextMessage(
-      phone,
-      'Recebi! Editando sua foto agora, já te envio o resultado 🚀',
-      { messageId: replyTo, delayTyping: 3 }
-    );
+    await sendTextMessage(phone, ResponseManager.getEditingStart(), { messageId: replyTo, delayTyping: 2 });
 
+    // Use CURRENT buffer for iterative editing
     const editedImage = await generateEditedImageFromBuffer(
-      session.buffer,
-      session.mimeType,
+      session.currentBuffer,
+      session.currentMimeType,
       prompt,
       session.hotspot || getHotspot()
     );
 
+    // Convert base64 back to buffer for storage
+    const base64Data = editedImage.replace(/^data:image\/\w+;base64,/, "");
+    const newBuffer = Buffer.from(base64Data, 'base64');
+
+    // Update session with new image
+    updateSession(phone, newBuffer, session.currentMimeType);
+
     await sendImageMessage(
       phone,
       editedImage,
-      'Pronto! Se quiser outra variação, mande outro texto.',
+      ResponseManager.getEditingSuccess(),
       { messageId: replyTo }
     );
+
+    // Send options after image
+    const options = ResponseManager.getEditOptions();
+    await sendButtonActions(phone, options.title, options.buttons);
+
   } catch (error) {
     console.error('Falha ao processar edição', error);
-    await sendTextMessage(
-      phone,
-      'Não consegui editar sua foto agora. Tente novamente em alguns segundos.',
-      { messageId: replyTo }
-    );
+    await sendTextMessage(phone, ResponseManager.getEditingFailure(), { messageId: replyTo });
   }
 };
 
@@ -158,16 +156,13 @@ export const handleZapiWebhook = async (payload) => {
   const hasAudio = Boolean(payload?.audio?.audioUrl);
   const hasSession = sessionStore.has(phone);
 
+  // --- HANDLE AUDIO ---
   if (hasAudio) {
-    await sendTextMessage(
-      phone,
-      'Recebi seu áudio! Para editar a foto, me mande em texto o que você quer que eu faça ou envie uma foto nova.',
-      { messageId: replyTo }
-    );
-    await sendMenuButtons(phone, replyTo);
+    await sendTextMessage(phone, ResponseManager.getAudioReceived(), { messageId: replyTo });
     return;
   }
 
+  // --- HANDLE NEW IMAGE ---
   if (hasImage) {
     try {
       const { buffer, mimeType } = await downloadImage(
@@ -175,59 +170,88 @@ export const handleZapiWebhook = async (payload) => {
         payload.image.mimeType
       );
 
+      // Initialize new session
       sessionStore.set(phone, {
-        buffer,
-        mimeType,
+        originalBuffer: buffer,
+        originalMimeType: mimeType,
+        currentBuffer: buffer,
+        currentMimeType: mimeType,
+        history: [],
         hotspot: getHotspot(),
         updatedAt: Date.now(),
       });
 
+      await sendTextMessage(phone, ResponseManager.getImageReceived(), { messageId: replyTo });
+
       if (prompt) {
+        // If image came with caption, process immediately
         await processEdit({ phone, prompt, replyTo });
       } else {
-        await sendTextMessage(
-          phone,
-          'Foto recebida! Agora me diga o que fazer (ex: trocar fundo para Paris, colocar terno, carro esportivo, etc).',
-          { messageId: replyTo }
-        );
+        // Otherwise show menu
+        const menu = ResponseManager.getMenuOptions();
+        await sendButtonList(phone, menu.title, menu.buttons);
       }
     } catch (error) {
       console.error('Erro ao baixar imagem', error);
       await sendTextMessage(
         phone,
-        'Não consegui baixar sua foto. Envie novamente ou tente outro arquivo.',
+        'Não consegui baixar sua foto. 😕 Tente enviar novamente.',
         { messageId: replyTo }
       );
     }
-      await sendMenuButtons(phone, replyTo);
+    return;
+  }
+
+  // --- HANDLE TEXT / COMMANDS ---
+  if (prompt) {
+    const lowerPrompt = prompt.toLowerCase();
+
+    // 1. Check for Special Commands
+    if (lowerPrompt === 'undo' || lowerPrompt === 'desfazer') {
+      if (undoLastEdit(phone)) {
+        const session = sessionStore.get(phone);
+        const dataUrl = `data:${session.currentMimeType};base64,${session.currentBuffer.toString('base64')}`;
+        await sendImageMessage(phone, dataUrl, 'Desfeito! 🔙 Voltamos para a versão anterior.', { messageId: replyTo });
+      } else {
+        await sendTextMessage(phone, 'Não há nada para desfazer ou nenhuma sessão ativa.', { messageId: replyTo });
+      }
       return;
     }
 
-    if (prompt) {
-      if (isGreetingOrHelp(prompt) && !hasSession) {
-        await sendTextMessage(phone, friendlyIntro(), { messageId: replyTo });
-        await sendMenuButtons(phone, replyTo);
-        return;
+    if (lowerPrompt === 'reset' || lowerPrompt === 'reiniciar' || lowerPrompt === 'nova foto') {
+      if (resetSession(phone)) {
+        const session = sessionStore.get(phone);
+        const dataUrl = `data:${session.currentMimeType};base64,${session.currentBuffer.toString('base64')}`;
+        await sendImageMessage(phone, dataUrl, 'Reiniciado! 🔄 Voltamos para a foto original.', { messageId: replyTo });
+      } else {
+        await sendTextMessage(phone, 'Mande uma foto para começar!', { messageId: replyTo });
       }
+      return;
+    }
 
-      if (!hasSession) {
-        await sendTextMessage(
-          phone,
-          `${friendlyIntro()}\n\nPode mandar a foto aqui mesmo e depois o que deseja mudar.`,
-          { messageId: replyTo }
-        );
-        await sendMenuButtons(phone, replyTo);
-        return;
-      }
+    if (lowerPrompt === 'help' || lowerPrompt === 'ajuda' || lowerPrompt === 'menu') {
+      await sendTextMessage(phone, ResponseManager.getHelp(), { messageId: replyTo });
+      return;
+    }
 
+    if (lowerPrompt === 'ideas' || lowerPrompt === 'ideias') {
+      await sendTextMessage(phone, 'Tente pedir:\n- "Cyberpunk"\n- "Terno profissional"\n- "Fundo de praia"\n- "Estilo desenho 3D"', { messageId: replyTo });
+      return;
+    }
+
+    // 2. Handle Greetings (only if no session or explicit greeting)
+    const isGreeting = ['oi', 'ola', 'olá', 'hey'].some(w => lowerPrompt.includes(w));
+    if (isGreeting && !hasSession) {
+      await sendTextMessage(phone, ResponseManager.getGreeting(), { messageId: replyTo });
+      return;
+    }
+
+    // 3. Handle Edit Request
+    if (hasSession) {
       await processEdit({ phone, prompt, replyTo });
-      return;
+    } else {
+      // No session, user sent text
+      await sendTextMessage(phone, ResponseManager.getGreeting(), { messageId: replyTo });
     }
-
-  await sendTextMessage(
-    phone,
-    `${friendlyIntro()}\n\nEstou pronta para receber sua foto 😉`,
-    { messageId: replyTo }
-  );
-  await sendMenuButtons(phone, replyTo);
+  }
 };
