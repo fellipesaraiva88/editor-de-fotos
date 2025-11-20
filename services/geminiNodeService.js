@@ -100,10 +100,12 @@ Target Point: (${hotspot.x}, ${hotspot.y})
 - **SCALE:** The person should not be a giant next to the car. Keep realistic human-to-car proportions.
 - **REFLECTIONS:** Car paint must reflect the environment (sky, ground) to look photorealistic.
 - **LIGHTING:** Use "Golden Hour" or "Cinematic" lighting for high production value.
+- **SUBJECT PLACEMENT:** The person from the original photo MUST appear in the final scene. If the user asks for "inside/in a car" or any location, place the subject inside that environment or seated in the vehicle, not just show the scene alone.
 
 **EDITING RULES:**
 - **Environment Change:** If the user changes the background, adjust the *lighting* on the face to match the new scene, but do not warp the features.
 - **Pose Adaptation:** If the scene requires it (e.g. "sitting in a car"), adapt the body pose naturally, but keep the head/neck connection realistic.
+- **NO EMPTY SCENES:** Never respond with a scene without the subject. The edited image must contain the original person clearly visible.
 
 Output: Return ONLY the edited image as base64.`;
 
