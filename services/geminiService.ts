@@ -101,23 +101,26 @@ const extractImageFromResponse = (response: any): string => {
 
 
 /**
- * Analyzes the uploaded image and generates 4 tailored editing suggestions.
+ * Analyzes the uploaded image and generates 4 tailored editing suggestions in Portuguese.
  */
 export const analyzeImageForSuggestions = async (originalImage: File): Promise<{ label: string, emoji: string, prompt: string }[]> => {
-    console.log('Starting AI Analysis for suggestions...');
+    console.log('Iniciando análise de IA para sugestões...');
     const imageData = await fileToBase64(originalImage);
 
-    const prompt = `Analyze this image carefully. Identify the subject (gender, clothing style, pose) and the current environment.
-    Based on this analysis, generate 4 creative, high-end "Instagram Influencer" style editing suggestions.
+    const prompt = `Analise esta imagem com atenção. Identifique o sujeito (gênero, estilo de roupa, pose) e o ambiente atual.
 
-    The suggestions should be distinct categories:
-    1. A Location Change (Travel/Luxury)
-    2. An Outfit Upgrade (Fashion)
-    3. A Vehicle/Lifestyle scenario
-    4. A Creative/Artistic Filter or Lighting change.
+Com base nesta análise, gere 4 sugestões criativas de edição no estilo "Instagram Influencer de alto padrão".
 
-    Return ONLY a valid JSON array of objects. Do not use markdown formatting.
-    Format: [{"label": "Short Title (Max 15 chars)", "emoji": "Relevant Emoji", "prompt": "Full detailed prompt for the edit, adhering to realism rules."}]
+As sugestões devem ser em categorias distintas:
+1. Mudança de Local (Viagem/Luxo)
+2. Upgrade de Roupa (Moda)
+3. Cenário com Veículo/Lifestyle
+4. Filtro Criativo/Artístico ou mudança de Iluminação
+
+IMPORTANTE: Todas as labels e prompts devem estar em PORTUGUÊS.
+
+Retorne APENAS um array JSON válido de objetos. Não use formatação markdown.
+Formato: [{"label": "Título Curto (Max 15 chars)", "emoji": "Emoji Relevante", "prompt": "Prompt completo e detalhado para a edição, em português, seguindo regras de realismo."}]
     `;
 
     try {
@@ -144,49 +147,90 @@ export const analyzeImageForSuggestions = async (originalImage: File): Promise<{
         const parsed = JSON.parse(jsonText);
         return Array.isArray(parsed) ? parsed : parsed.suggestions || [];
     } catch (e) {
-        console.error("Failed to analyze image", e);
+        console.error("Falha ao analisar imagem", e);
         return [];
     }
 };
 
 /**
- * Generates an edited image using generative AI based on a text prompt and a specific point.
+ * Generates an edited image using generative AI based on a descriptive narrative.
+ * Hotspot is now optional - used only when precise area targeting is needed.
  * @param originalImage The original image file.
- * @param userPrompt The text prompt describing the desired edit.
- * @param hotspot The {x, y} coordinates on the image to focus the edit.
+ * @param userPrompt The text prompt describing the desired edit (in Portuguese).
+ * @param hotspot Optional {x, y} coordinates for precise area targeting.
  * @returns A promise that resolves to the data URL of the edited image.
  */
 export const generateEditedImage = async (
     originalImage: File,
     userPrompt: string,
-    hotspot: { x: number, y: number }
+    hotspot?: { x: number, y: number }
 ): Promise<string> => {
-    console.log('Starting generative edit at:', hotspot);
+    console.log('Iniciando edição generativa:', { userPrompt, hotspot });
     const imageData = await fileToBase64(originalImage);
 
-    const prompt = `You are a world-class high-end photo retoucher AI.
-User Request (Portuguese): "${userPrompt}"
-Target Point: (${hotspot.x}, ${hotspot.y})
+    // Construir narrativa descritiva seguindo as melhores práticas do Nano Banana
+    const targetInfo = hotspot
+        ? `\n\n📍 ÁREA DE FOCO: Concentre a edição principal na região próxima às coordenadas (${hotspot.x}, ${hotspot.y}) da imagem.`
+        : '';
 
-**PROTOCOL: BIOMETRIC IDENTITY LOCK**
-1.  **FACE IS SACRED:** Do NOT regenerate the face from scratch. You must preserve the exact facial structure, nose shape, eye shape, and mouth.
-2.  **PRESERVE IMPERFECTIONS:** Keep moles, freckles, and unique skin textures. Do NOT apply a generic "smooth plastic" filter unless explicitly asked.
-3.  **EXPRESSION LOCK:** The facial expression (smile lines, eye squint, brow position) MUST remain exactly as is.
-4.  **FACIAL FIDELITY:** Keep jawline, cheekbones, hairline, beard/stubble, eyebrows, and eyewear TOTALLY consistent. No slimming, no reshaping, no generic face swap.
+    const prompt = `Você é um retocador fotográfico profissional de nível mundial especializado em edições realistas de alta qualidade.
 
-**AUTOMOTIVE & LUXURY RULES:**
-- If a car is requested (Ferrari, Porsche, etc.), render the SPECIFIC model accurately.
-- **SCALE:** The person should not be a giant next to the car. Keep realistic human-to-car proportions.
-- **REFLECTIONS:** Car paint must reflect the environment (sky, ground) to look photorealistic.
-- **LIGHTING:** Use "Golden Hour" or "Cinematic" lighting for high production value.
+🎯 SOLICITAÇÃO DO USUÁRIO:
+"${userPrompt}"${targetInfo}
 
-**EDITING RULES:**
-- **Environment Change:** If the user changes the background, adjust the *lighting* on the face to match the new scene, but do not warp the features.
-- **Pose Adaptation:** If the scene requires it (e.g. "sitting in a car"), adapt the body pose naturally, but keep the head/neck connection realistic.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 PROTOCOLO DE PRESERVAÇÃO DE IDENTIDADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Output: Return ONLY the edited image as base64.`;
+1. **ROSTO É SAGRADO**:
+   - Mantenha a estrutura facial EXATA: formato do rosto, nariz, olhos, boca
+   - Preserve sinais, sardas, texturas naturais da pele
+   - NUNCA aplique filtro de "pele plástica" lisa
 
-    console.log('Sending image and prompt to the model...');
+2. **EXPRESSÃO BLOQUEADA**:
+   - Linhas de sorriso, franzido de olhos, posição das sobrancelhas devem permanecer EXATAMENTE como estão
+
+3. **FIDELIDADE FACIAL TOTAL**:
+   - Maxilar, maçãs do rosto, linha do cabelo
+   - Barba, bigode, pelos faciais
+   - Óculos, piercings, acessórios faciais
+   - ZERO mudanças na geometria do rosto
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📐 REGRAS DE COMPOSIÇÃO E REALISMO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Proporções e Escala:**
+- Mantenha proporções humanas realistas
+- Se adicionar veículos (carros de luxo, etc.), renderize o modelo ESPECÍFICO com precisão
+- A pessoa NÃO deve parecer um gigante ao lado do carro
+- Use escala realista humano-para-objeto
+
+**Iluminação Cinematográfica:**
+- Aplique "Golden Hour" ou iluminação cinematográfica profissional
+- Ajuste a luz no rosto para combinar com o novo ambiente
+- Mantenha sombras e reflexos naturais e coerentes
+
+**Reflexos e Materiais:**
+- Pintura de carros deve refletir o ambiente (céu, chão)
+- Superfícies metálicas e vidros devem ter reflexos fotorrealistas
+
+**Adaptação de Pose:**
+- Se a cena exigir (ex: "sentado em um carro"), adapte a pose do corpo naturalmente
+- Mantenha a conexão cabeça/pescoço realista
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 CONTROLE DE ASPECTO E QUALIDADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Preserve a proporção de aspecto (aspect ratio) da imagem original
+- Use linguagem fotográfica e técnicas de edição profissional
+- Mantenha texturas e detalhes de alta qualidade
+- Evite artefatos artificiais ou distorções
+
+📤 SAÍDA: Retorne APENAS a imagem editada final.`;
+
+    console.log('Enviando para Gemini 2.5 Flash Image...');
     const response = await callOpenRouter(
         'google/gemini-2.5-flash-preview-image',
         [{
@@ -208,24 +252,63 @@ Output: Return ONLY the edited image as base64.`;
 };
 
 /**
- * Generates an image with a filter applied using generative AI.
+ * Generates an image with a stylistic filter applied using generative AI.
+ * Focuses on color grading and atmosphere while preserving identity.
  * @param originalImage The original image file.
- * @param filterPrompt The text prompt describing the desired filter.
+ * @param filterPrompt The text prompt describing the desired filter (in Portuguese).
  * @returns A promise that resolves to the data URL of the filtered image.
  */
 export const generateFilteredImage = async (
     originalImage: File,
     filterPrompt: string,
 ): Promise<string> => {
-    console.log(`Starting filter generation: ${filterPrompt}`);
+    console.log(`Iniciando geração de filtro: ${filterPrompt}`);
     const imageData = await fileToBase64(originalImage);
 
-    const prompt = `You are an expert photo editor AI. Apply a stylistic filter.
-User Request: "${filterPrompt}"
-CRITICAL: Do not alter facial features. Keep the person exactly as they are. Only change color grading and atmosphere.
-Output: Return ONLY the final filtered image.`;
+    const prompt = `Você é um especialista em edição fotográfica e color grading cinematográfico.
 
-    console.log('Sending image and filter prompt to the model...');
+🎨 SOLICITAÇÃO DE FILTRO:
+"${filterPrompt}"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔒 REGRAS DE PRESERVAÇÃO (CRÍTICO)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**IDENTIDADE INTOCÁVEL:**
+- NÃO altere características faciais
+- Mantenha a pessoa EXATAMENTE como ela é
+- Preserve estrutura facial, expressão, e detalhes únicos
+
+**FOCO DO FILTRO:**
+Esta é uma edição de ATMOSFERA E COR, não de conteúdo.
+- Modifique apenas: color grading, temperatura de cor, saturação, contraste
+- Aplique mood/atmosfera através de ajustes de luz e cor
+- Use técnicas de cinema e fotografia profissional
+
+**EFEITOS PERMITIDOS:**
+✓ Correção de cor e balanço de branco
+✓ Ajustes de exposição e contraste
+✓ Vinheta, bloom, grain cinematográfico
+✓ LUTs e presets de color grading
+✓ Efeitos de iluminação atmosférica
+
+**PROIBIDO:**
+✗ Alterar geometria facial ou corporal
+✗ Modificar a composição ou elementos da cena
+✗ Adicionar ou remover objetos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📸 QUALIDADE TÉCNICA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Mantenha a proporção de aspecto original
+- Preserve detalhes e nitidez da imagem
+- Use transições suaves de cor
+- Evite posterização e artefatos
+
+📤 SAÍDA: Retorne APENAS a imagem final com o filtro aplicado.`;
+
+    console.log('Enviando para Gemini 2.5 Flash Image...');
     const response = await callOpenRouter(
         'google/gemini-2.5-flash-preview-image',
         [{
@@ -249,25 +332,60 @@ Output: Return ONLY the final filtered image.`;
 /**
  * Generates an image with a global adjustment applied using generative AI.
  * @param originalImage The original image file.
- * @param adjustmentPrompt The text prompt describing the desired adjustment.
+ * @param adjustmentPrompt The text prompt describing the desired adjustment (in Portuguese).
  * @returns A promise that resolves to the data URL of the adjusted image.
  */
 export const generateAdjustedImage = async (
     originalImage: File,
     adjustmentPrompt: string,
 ): Promise<string> => {
-    console.log(`Starting global adjustment generation: ${adjustmentPrompt}`);
+    console.log(`Iniciando geração de ajuste global: ${adjustmentPrompt}`);
     const imageData = await fileToBase64(originalImage);
 
-    const prompt = `You are an expert photo editor AI. Apply a global adjustment.
-User Request: "${adjustmentPrompt}"
+    const prompt = `Você é um especialista em edição fotográfica profissional.
 
-Rules:
-- IDENTITY LOCK: Do not change the person's face.
-- The adjustment must be natural and photorealistic.
-Output: Return ONLY the final adjusted image.`;
+⚙️ AJUSTE GLOBAL SOLICITADO:
+"${adjustmentPrompt}"
 
-    console.log('Sending image and adjustment prompt to the model...');
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 BLOQUEIO DE IDENTIDADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**CRÍTICO:**
+- NÃO modifique o rosto da pessoa
+- Preserve características faciais EXATAS
+- Mantenha expressão e estrutura facial
+- Conserve detalhes únicos (sinais, sardas, textura de pele)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 AJUSTES PERMITIDOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Técnicos:**
+- Brilho, contraste, exposição
+- Nitidez, clareza, definição
+- Sombras, highlights, midtones
+- Balanço de branco e temperatura
+
+**Artísticos:**
+- Saturação e vibrance
+- Tons de cor e matiz
+- Vinheta e efeitos de borda
+- Grain e textura cinematográfica
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📐 REQUISITOS DE QUALIDADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Ajuste deve ser NATURAL e fotorrealista
+- Evite over-processing (excesso de edição)
+- Mantenha proporção de aspecto original
+- Preserve detalhes e texturas importantes
+- Use transições suaves, sem artefatos
+
+📤 SAÍDA: Retorne APENAS a imagem final ajustada.`;
+
+    console.log('Enviando para Gemini 2.5 Flash Image...');
     const response = await callOpenRouter(
         'google/gemini-2.5-flash-preview-image',
         [{
@@ -290,9 +408,10 @@ Output: Return ONLY the final adjusted image.`;
 
 /**
  * Generates an edited image based on location and outfit prompts from the wizard.
+ * Uses descriptive narrative approach for best Nano Banana results.
  * @param originalImage The original image file.
- * @param locationPrompt The location/background prompt.
- * @param outfitPrompt The outfit/clothing prompt.
+ * @param locationPrompt The location/background prompt (in Portuguese).
+ * @param outfitPrompt The outfit/clothing prompt (in Portuguese).
  * @returns A promise that resolves to the data URL of the edited image.
  */
 export const generateWizardImage = async (
@@ -300,31 +419,77 @@ export const generateWizardImage = async (
     locationPrompt: string,
     outfitPrompt: string
 ): Promise<string> => {
-    console.log('Starting wizard image generation:', { locationPrompt, outfitPrompt });
+    console.log('Iniciando geração wizard:', { locationPrompt, outfitPrompt });
     const imageData = await fileToBase64(originalImage);
 
-    const prompt = `You are a world-class high-end photo retoucher AI.
+    const prompt = `Você é um retocador fotográfico profissional de nível mundial especializado em transformações realistas de alta qualidade.
 
-Transform this person's photo with these specifications:
-- LOCATION: Place the person ${locationPrompt}
-- OUTFIT: Change their clothes to be ${outfitPrompt}
+🎬 TRANSFORMAÇÃO SOLICITADA:
 
-**CRITICAL RULES - BIOMETRIC IDENTITY LOCK**
-1. **FACE IS SACRED:** Preserve the EXACT facial structure, nose shape, eye shape, mouth, and expression.
-2. **PRESERVE IMPERFECTIONS:** Keep moles, freckles, skin texture, and unique features.
-3. **EXPRESSION LOCK:** The facial expression must remain exactly as in the original.
-4. **FACIAL FIDELITY:** Keep jawline, cheekbones, hairline, beard/stubble, eyebrows, and eyewear TOTALLY consistent. No slimming, no reshaping, no generic face swap.
+📍 **LOCALIZAÇÃO:** Coloque a pessoa ${locationPrompt}
+👔 **ROUPA:** Mude as roupas para ${outfitPrompt}
 
-**QUALITY RULES:**
-- Use cinematic, professional lighting that matches the new environment
-- Ensure realistic shadows and reflections
-- The person should look naturally placed in the scene
-- Clothing should fit the person's body naturally
-- Maintain realistic proportions and scale
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 PROTOCOLO CRÍTICO - BLOQUEIO BIOMÉTRICO DE IDENTIDADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Output: Return ONLY the edited image with the person in the new location wearing the new outfit.`;
+**1. ROSTO É SAGRADO:**
+   - Preserve a estrutura facial EXATA: formato do rosto, nariz, olhos, boca
+   - Mantenha a expressão facial original COMPLETAMENTE
+   - Preserve sinais, sardas, texturas naturais da pele
 
-    console.log('Sending wizard request to the model...');
+**2. FIDELIDADE FACIAL TOTAL:**
+   - Maxilar, maçãs do rosto, linha do cabelo: IGUAIS
+   - Barba, bigode, pelos faciais: INALTERADOS
+   - Óculos, piercings, acessórios faciais: MANTIDOS
+   - ZERO mudanças na geometria ou proporções faciais
+
+**3. CARACTERÍSTICAS ÚNICAS:**
+   - Textura de pele e poros devem ser preservados
+   - NÃO aplique filtro de "pele plástica" lisa
+   - Mantenha imperfeições naturais que tornam a pessoa única
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📐 REGRAS DE QUALIDADE E REALISMO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Iluminação Cinematográfica:**
+- Use iluminação profissional de alta qualidade que combine com o novo ambiente
+- Aplique "Golden Hour" ou iluminação natural apropriada ao local
+- Crie sombras e reflexos realistas e coerentes
+- A luz deve afetar a roupa e o ambiente, mas preservar o rosto naturalmente
+
+**Integração Natural:**
+- A pessoa deve parecer NATURALMENTE posicionada no cenário
+- A roupa deve vestir o corpo da pessoa de forma natural e realista
+- Mantenha proporções e escala humanas corretas
+- Adapte a pose do corpo se necessário, mantendo naturalidade
+
+**Roupas e Vestimenta:**
+- As roupas devem ter textura, caimento e dobras realistas
+- Devem se ajustar ao tipo de corpo da pessoa
+- Considere como a roupa interage com a pose e movimento
+- Use materiais e tecidos apropriados ao contexto
+
+**Composição Fotográfica:**
+- Use linguagem fotográfica profissional
+- Mantenha ou melhore a qualidade da composição
+- Preserve a proporção de aspecto (aspect ratio) original
+- Evite distorções ou artefatos artificiais
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 OBJETIVO FINAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Criar uma imagem fotorrealista de alta qualidade onde:
+✓ A mesma pessoa (rosto 100% preservado)
+✓ Está no novo local especificado
+✓ Vestindo a nova roupa especificada
+✓ Tudo parece natural e profissionalmente fotografado
+
+📤 SAÍDA: Retorne APENAS a imagem editada final.`;
+
+    console.log('Enviando requisição wizard para o modelo...');
     const response = await callOpenRouter(
         'google/gemini-2.5-flash-preview-image',
         [{
