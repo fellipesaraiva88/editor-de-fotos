@@ -1,5 +1,5 @@
 import { generateEditedImageFromBuffer } from './geminiNodeService.js';
-import { sendButtonActions, sendImageMessage, sendTextMessage } from './zapiClient.js';
+import { sendButtonActions, sendButtonList, sendImageMessage, sendTextMessage } from './zapiClient.js';
 
 const sessionStore = new Map();
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
@@ -87,15 +87,15 @@ const sendMenuButtons = async (phone, replyTo) => {
   ];
 
   try {
-    await sendButtonActions(
+    await sendButtonList(
       phone,
       'Escolha uma opção rápida ou mande sua mensagem:',
       buttons
     );
-    } catch (error) {
-      console.error('Falha ao enviar botões', error);
-      await sendTextMessage(
-        phone,
+  } catch (error) {
+    console.error('Falha ao enviar botões', error);
+    await sendTextMessage(
+      phone,
         'Você pode: 1) Enviar foto 2) Pedir ideias 3) Pedir veículo/luxo.',
         { messageId: replyTo }
       );

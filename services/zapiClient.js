@@ -100,3 +100,30 @@ export const sendButtonActions = async (phone, message, buttons = []) => {
 
   return response.json();
 };
+
+export const sendButtonList = async (phone, message, buttons = []) => {
+  const { baseUrl, commonHeaders } = getConfig();
+  const payload = {
+    phone,
+    message,
+    buttonList: {
+      buttons: buttons.map((btn, idx) => ({
+        id: btn.id || `btn_${idx + 1}`,
+        label: btn.label || btn.text,
+      })),
+    },
+  };
+
+  const response = await fetch(`${baseUrl}/send-button-list`, {
+    method: 'POST',
+    headers: commonHeaders,
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`Falha ao enviar lista de botões pelo Z-API: ${response.status} ${detail}`);
+  }
+
+  return response.json();
+};
