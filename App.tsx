@@ -7,7 +7,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
-import { generateEditedImage, generateFilteredImage, generateAdjustedImage, analyzeImageForSuggestions } from './services/geminiService';
+import { generateEditedImage, generateFilteredImage, generateAdjustedImage, analyzeImageForSuggestions, generateWizardImage } from './services/geminiService';
 import Header from './components/Header';
 import Spinner from './components/Spinner';
 import FilterPanel from './components/FilterPanel';
@@ -15,6 +15,7 @@ import AdjustmentPanel from './components/AdjustmentPanel';
 import CropPanel from './components/CropPanel';
 import { UndoIcon, RedoIcon, EyeIcon, MagicWandIcon, PaletteIcon, SunIcon, UploadIcon, RefreshIcon } from './components/icons';
 import StartScreen from './components/StartScreen';
+import { WizardOverlay } from './components/wizard';
 
 // Helper to convert a data URL string to a File object
 const dataURLtoFile = (dataurl: string, filename: string): File => {
@@ -53,6 +54,7 @@ const App: React.FC = () => {
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [aspect, setAspect] = useState<number | undefined>();
   const [isComparing, setIsComparing] = useState<boolean>(false);
+  const [showWizard, setShowWizard] = useState<boolean>(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   const currentImage = history[historyIndex] ?? null;
@@ -149,8 +151,25 @@ const App: React.FC = () => {
     setCrop(undefined);
     setCompletedCrop(undefined);
     setAiSuggestions([]); // Clear previous
-    runAnalysis(file); // Trigger smart analysis
-  }, [runAnalysis]);
+    setShowWizard(true); // Show wizard after upload
+  }, []);
+
+  const handleWizardComplete = useCallback((editedImageUrl: string) => {
+    setShowWizard(false);
+    const newImageFile = dataURLtoFile(editedImageUrl, `wizard-${Date.now()}.png`);
+    addImageToHistory(newImageFile);
+    runAnalysis(history[0] || newImageFile); // Run analysis on original
+  }, [addImageToHistory, runAnalysis, history]);
+
+  const handleWizardCancel = useCallback(() => {
+    setShowWizard(false);
+    runAnalysis(history[0]); // Run analysis when wizard is cancelled
+  }, [runAnalysis, history]);
+
+  const handleWizardGenerate = useCallback(async (location: string, outfit: string): Promise<string> => {
+    if (!currentImage) throw new Error('No image');
+    return generateWizardImage(currentImage, location, outfit);
+  }, [currentImage]);
 
   const handleGenerate = useCallback(async () => {
     if (!currentImage) {
@@ -521,9 +540,17 @@ const App: React.FC = () => {
 
   return (
       <>
+        {showWizard && currentImage && (
+          <WizardOverlay
+            originalImage={currentImage}
+            onComplete={handleWizardComplete}
+            onCancel={handleWizardCancel}
+            generateImage={handleWizardGenerate}
+          />
+        )}
         {currentImageUrl ? (
              <div className="flex h-screen bg-black overflow-hidden font-sans">
-                
+
                 {/* Left Column: Canvas */}
                 <div className="flex-1 relative flex items-center justify-center bg-neutral-950 p-8 overflow-hidden">
                      {/* Background Grid Pattern for professionalism */}

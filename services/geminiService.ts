@@ -286,3 +286,59 @@ Output: Return ONLY the final adjusted image.`;
 
     return extractImageFromResponse(response);
 };
+
+/**
+ * Generates an edited image based on location and outfit prompts from the wizard.
+ * @param originalImage The original image file.
+ * @param locationPrompt The location/background prompt.
+ * @param outfitPrompt The outfit/clothing prompt.
+ * @returns A promise that resolves to the data URL of the edited image.
+ */
+export const generateWizardImage = async (
+    originalImage: File,
+    locationPrompt: string,
+    outfitPrompt: string
+): Promise<string> => {
+    console.log('Starting wizard image generation:', { locationPrompt, outfitPrompt });
+    const imageData = await fileToBase64(originalImage);
+
+    const prompt = `You are a world-class high-end photo retoucher AI.
+
+Transform this person's photo with these specifications:
+- LOCATION: Place the person ${locationPrompt}
+- OUTFIT: Change their clothes to be ${outfitPrompt}
+
+**CRITICAL RULES - BIOMETRIC IDENTITY LOCK**
+1. **FACE IS SACRED:** Preserve the EXACT facial structure, nose shape, eye shape, mouth, and expression.
+2. **PRESERVE IMPERFECTIONS:** Keep moles, freckles, skin texture, and unique features.
+3. **EXPRESSION LOCK:** The facial expression must remain exactly as in the original.
+
+**QUALITY RULES:**
+- Use cinematic, professional lighting that matches the new environment
+- Ensure realistic shadows and reflections
+- The person should look naturally placed in the scene
+- Clothing should fit the person's body naturally
+- Maintain realistic proportions and scale
+
+Output: Return ONLY the edited image with the person in the new location wearing the new outfit.`;
+
+    console.log('Sending wizard request to the model...');
+    const response = await callOpenRouter(
+        'google/gemini-2.5-flash-preview-image',
+        [{
+            role: 'user',
+            content: [
+                {
+                    type: 'image_url',
+                    image_url: {
+                        url: `data:${imageData.mimeType};base64,${imageData.data}`
+                    }
+                },
+                { type: 'text', text: prompt }
+            ]
+        }],
+        { modalities: ['image', 'text'] }
+    );
+
+    return extractImageFromResponse(response);
+};
