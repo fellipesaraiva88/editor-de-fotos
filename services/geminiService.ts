@@ -148,7 +148,7 @@ Output: Return ONLY the edited image as base64.`;
 
     console.log('Sending image and prompt to the model...');
     const response = await callOpenRouter(
-        'google/gemini-2.5-flash-preview-05-20',
+        'google/gemini-2.5-flash-preview-image',
         [{
             role: 'user',
             content: [
@@ -206,7 +206,7 @@ Output: Return ONLY the final filtered image.`;
 
     console.log('Sending image and filter prompt to the model...');
     const response = await callOpenRouter(
-        'google/gemini-2.5-flash-preview-05-20',
+        'google/gemini-2.5-flash-preview-image',
         [{
             role: 'user',
             content: [
@@ -264,7 +264,7 @@ Output: Return ONLY the final adjusted image.`;
 
     console.log('Sending image and adjustment prompt to the model...');
     const response = await callOpenRouter(
-        'google/gemini-2.5-flash-preview-05-20',
+        'google/gemini-2.5-flash-preview-image',
         [{
             role: 'user',
             content: [
