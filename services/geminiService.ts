@@ -29,7 +29,7 @@ const fileToBase64 = async (file: File): Promise<{ mimeType: string; data: strin
 const callOpenRouter = async (
     model: string,
     messages: any[],
-    responseFormat?: { type: string }
+    options?: { responseFormat?: { type: string }; modalities?: string[] }
 ): Promise<any> => {
     const apiKey = process.env.API_KEY || process.env.OPENROUTER_API_KEY;
 
@@ -48,7 +48,8 @@ const callOpenRouter = async (
         body: JSON.stringify({
             model,
             messages,
-            ...(responseFormat && { response_format: responseFormat })
+            ...(options?.responseFormat && { response_format: options.responseFormat }),
+            ...(options?.modalities && { modalities: options.modalities })
         })
     });
 
@@ -58,6 +59,44 @@ const callOpenRouter = async (
     }
 
     return response.json();
+};
+
+// Helper to extract image from OpenRouter response
+const extractImageFromResponse = (response: any): string => {
+    const message = response.choices?.[0]?.message;
+
+    // Check for images array (OpenRouter image generation format)
+    if (message?.images && Array.isArray(message.images)) {
+        const imageData = message.images[0]?.image_url?.url;
+        if (imageData) {
+            return imageData;
+        }
+    }
+
+    // Check content for image data
+    const content = message?.content;
+    if (!content) {
+        throw new Error('O modelo não retornou uma resposta.');
+    }
+
+    // Check if response is an array with image data
+    if (Array.isArray(content)) {
+        const imagePart = content.find((part: any) => part.type === 'image_url' || part.image_url);
+        if (imagePart?.image_url?.url) {
+            return imagePart.image_url.url;
+        }
+    }
+
+    // Check if the response contains base64 image data in text
+    if (typeof content === 'string') {
+        const base64Match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
+        if (base64Match) {
+            return base64Match[0];
+        }
+    }
+
+    throw new Error('O modelo não retornou uma imagem. Resposta: ' +
+        (typeof content === 'string' ? content.substring(0, 200) : JSON.stringify(content).substring(0, 200)));
 };
 
 
@@ -96,7 +135,7 @@ export const analyzeImageForSuggestions = async (originalImage: File): Promise<{
                     { type: 'text', text: prompt }
                 ]
             }],
-            { type: 'json_object' }
+            { responseFormat: { type: 'json_object' } }
         );
 
         const jsonText = response.choices?.[0]?.message?.content?.trim();
@@ -160,30 +199,11 @@ Output: Return ONLY the edited image as base64.`;
                 },
                 { type: 'text', text: prompt }
             ]
-        }]
+        }],
+        { modalities: ['image', 'text'] }
     );
 
-    const content = response.choices?.[0]?.message?.content;
-    if (!content) {
-        throw new Error('O modelo não retornou uma resposta.');
-    }
-
-    // Check if response is an array with image data
-    if (Array.isArray(content)) {
-        const imagePart = content.find((part: any) => part.type === 'image_url' || part.image_url);
-        if (imagePart?.image_url?.url) {
-            return imagePart.image_url.url;
-        }
-    }
-
-    // Check if the response contains base64 image data
-    const base64Match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
-    if (base64Match) {
-        return base64Match[0];
-    }
-
-    // If no image, throw error
-    throw new Error('O modelo não conseguiu gerar a imagem editada. Resposta: ' + (typeof content === 'string' ? content.substring(0, 200) : JSON.stringify(content).substring(0, 200)));
+    return extractImageFromResponse(response);
 };
 
 /**
@@ -218,27 +238,11 @@ Output: Return ONLY the final filtered image.`;
                 },
                 { type: 'text', text: prompt }
             ]
-        }]
+        }],
+        { modalities: ['image', 'text'] }
     );
 
-    const content = response.choices?.[0]?.message?.content;
-    if (!content) {
-        throw new Error('O modelo não retornou uma resposta.');
-    }
-
-    if (Array.isArray(content)) {
-        const imagePart = content.find((part: any) => part.type === 'image_url' || part.image_url);
-        if (imagePart?.image_url?.url) {
-            return imagePart.image_url.url;
-        }
-    }
-
-    const base64Match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
-    if (base64Match) {
-        return base64Match[0];
-    }
-
-    throw new Error('O modelo não conseguiu aplicar o filtro.');
+    return extractImageFromResponse(response);
 };
 
 /**
@@ -276,25 +280,9 @@ Output: Return ONLY the final adjusted image.`;
                 },
                 { type: 'text', text: prompt }
             ]
-        }]
+        }],
+        { modalities: ['image', 'text'] }
     );
 
-    const content = response.choices?.[0]?.message?.content;
-    if (!content) {
-        throw new Error('O modelo não retornou uma resposta.');
-    }
-
-    if (Array.isArray(content)) {
-        const imagePart = content.find((part: any) => part.type === 'image_url' || part.image_url);
-        if (imagePart?.image_url?.url) {
-            return imagePart.image_url.url;
-        }
-    }
-
-    const base64Match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/);
-    if (base64Match) {
-        return base64Match[0];
-    }
-
-    throw new Error('O modelo não conseguiu aplicar o ajuste.');
+    return extractImageFromResponse(response);
 };
