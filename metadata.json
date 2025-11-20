@@ -1,6 +1,6 @@
 {
-  "name": "Saraiva.EDIT",
-  "description": "Gemini brings professional, prompt-based photo editing to your fingertips.",
+  "name": "WhatsApp Photo AI",
+  "description": "Bot dedicado a editar/gerar fotos via IA direto no WhatsApp usando Z-API + OpenRouter (Gemini).",
   "requestFramePermissions": [],
   "prompt": ""
 }

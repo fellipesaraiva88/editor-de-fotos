@@ -72,11 +72,12 @@ const isGreetingOrHelp = (text) => {
 
 const friendlyIntro = () =>
   [
-    'Oi! Eu sou o estúdio de IA que edita sua foto via WhatsApp 👋',
+    'Oi! Eu sou a IA que gera/edita sua foto direto no WhatsApp 👋',
     'Como funciona:',
     '1) Me mande uma foto',
-    '2) Diga o que quer (ex: fundo Paris, colocar terno, carro esportivo ao lado, estilo cyberpunk, filtro golden hour)',
-    '3) Eu devolvo a versão editada e você pode pedir variações',
+    '2) Diga o que quer (ex: fundo Paris, terno azul, carro esportivo ao lado, estilo cyberpunk, filtro golden hour)',
+    '3) Eu devolvo a versão editada; pode pedir variações em seguida',
+    'Dica: uso a mesma foto por 30 minutos. Envie nova foto para reiniciar.',
   ].join('\n');
 
 const sendMenuButtons = async (phone, replyTo) => {

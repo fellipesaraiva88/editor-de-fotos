@@ -18,8 +18,8 @@ const callOpenRouter = async (model, messages, options = {}) => {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.OPENROUTER_REFERER || 'https://saraiva.edit/whatsapp',
-      'X-Title': 'Saraiva.EDIT WhatsApp Bot',
+      'HTTP-Referer': process.env.OPENROUTER_REFERER || 'https://whatsapp-photo-ai',
+      'X-Title': 'WhatsApp Photo AI Bot',
     },
     body: JSON.stringify({
       model,
