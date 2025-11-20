@@ -51,6 +51,34 @@ const extractPrompt = (payload) => {
 
 const getHotspot = () => ({ x: 512, y: 512 }); // Centro padrão
 
+const isGreetingOrHelp = (text) => {
+  const normalized = text.toLowerCase();
+  return [
+    'oi',
+    'ola',
+    'olá',
+    'hey',
+    'eae',
+    'fala',
+    'bom dia',
+    'boa tarde',
+    'boa noite',
+    'menu',
+    'ajuda',
+    'como funciona',
+    'tutorial',
+  ].some((kw) => normalized.includes(kw));
+};
+
+const friendlyIntro = () =>
+  [
+    'Oi! Eu sou o estúdio de IA que edita sua foto via WhatsApp 👋',
+    'Como funciona:',
+    '1) Me mande uma foto',
+    '2) Diga o que quer (ex: fundo Paris, colocar terno, carro esportivo ao lado, estilo cyberpunk, filtro golden hour)',
+    '3) Eu devolvo a versão editada e você pode pedir variações',
+  ].join('\n');
+
 const processEdit = async ({ phone, prompt, replyTo }) => {
   const session = sessionStore.get(phone);
   if (!session) {
@@ -103,6 +131,7 @@ export const handleZapiWebhook = async (payload) => {
   const prompt = extractPrompt(payload);
   const replyTo = payload?.messageId || undefined;
   const hasImage = Boolean(payload?.image?.imageUrl);
+  const hasSession = sessionStore.has(phone);
 
   if (hasImage) {
     try {
@@ -139,13 +168,27 @@ export const handleZapiWebhook = async (payload) => {
   }
 
   if (prompt) {
+    if (isGreetingOrHelp(prompt) && !hasSession) {
+      await sendTextMessage(phone, friendlyIntro(), { messageId: replyTo });
+      return;
+    }
+
+    if (!hasSession) {
+      await sendTextMessage(
+        phone,
+        `${friendlyIntro()}\n\nPode mandar a foto aqui mesmo e depois o que deseja mudar.`,
+        { messageId: replyTo }
+      );
+      return;
+    }
+
     await processEdit({ phone, prompt, replyTo });
     return;
   }
 
   await sendTextMessage(
     phone,
-    'Envie uma foto e depois escreva a instrução do que quer mudar nela.',
+    `${friendlyIntro()}\n\nEstou pronta para receber sua foto 😉`,
     { messageId: replyTo }
   );
 };
