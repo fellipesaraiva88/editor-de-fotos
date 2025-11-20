@@ -76,9 +76,14 @@ export const sendButtonActions = async (phone, message, buttons = []) => {
   const payload = {
     phone,
     message,
-    buttonList: buttons.map((btn, idx) => ({
+    title: 'Atalhos rápidos',
+    footer: 'Escolha uma opção ou mande sua mensagem',
+    buttonActions: buttons.map((btn, idx) => ({
       id: btn.id || `btn_${idx + 1}`,
-      text: btn.text,
+      type: btn.type || 'REPLY',
+      label: btn.label || btn.text,
+      ...(btn.url && { url: btn.url }),
+      ...(btn.phone && { phone: btn.phone }),
     })),
   };
 

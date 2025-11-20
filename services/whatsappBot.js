@@ -81,9 +81,9 @@ const friendlyIntro = () =>
 
 const sendMenuButtons = async (phone, replyTo) => {
   const buttons = [
-    { text: 'Enviar foto' },
-    { text: 'Ideias de edição' },
-    { text: 'Ver carros/luxo' },
+    { id: 'send_photo', text: 'Enviar foto', type: 'REPLY' },
+    { id: 'ideas', text: 'Ideias de edição', type: 'REPLY' },
+    { id: 'cars', text: 'Ver carros/luxo', type: 'REPLY' },
   ];
 
   try {
@@ -92,15 +92,15 @@ const sendMenuButtons = async (phone, replyTo) => {
       'Escolha uma opção rápida ou mande sua mensagem:',
       buttons
     );
-  } catch (error) {
-    console.error('Falha ao enviar botões', error);
-    await sendTextMessage(
-      phone,
-      'Você pode: 1) Enviar foto 2) Pedir ideias 3) Pedir veículo/luxo.',
-      { messageId: replyTo }
-    );
-  }
-};
+    } catch (error) {
+      console.error('Falha ao enviar botões', error);
+      await sendTextMessage(
+        phone,
+        'Você pode: 1) Enviar foto 2) Pedir ideias 3) Pedir veículo/luxo.',
+        { messageId: replyTo }
+      );
+    }
+  };
 
 const processEdit = async ({ phone, prompt, replyTo }) => {
   const session = sessionStore.get(phone);
