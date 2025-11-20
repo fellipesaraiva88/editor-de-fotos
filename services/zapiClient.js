@@ -70,3 +70,28 @@ export const sendImageMessage = async (phone, imageDataUrl, caption, options = {
 
   return response.json();
 };
+
+export const sendButtonActions = async (phone, message, buttons = []) => {
+  const { baseUrl, commonHeaders } = getConfig();
+  const payload = {
+    phone,
+    message,
+    buttonList: buttons.map((btn, idx) => ({
+      id: btn.id || `btn_${idx + 1}`,
+      text: btn.text,
+    })),
+  };
+
+  const response = await fetch(`${baseUrl}/send-button-actions`, {
+    method: 'POST',
+    headers: commonHeaders,
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`Falha ao enviar botões pelo Z-API: ${response.status} ${detail}`);
+  }
+
+  return response.json();
+};

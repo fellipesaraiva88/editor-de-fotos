@@ -1,5 +1,5 @@
 import { generateEditedImageFromBuffer } from './geminiNodeService.js';
-import { sendImageMessage, sendTextMessage } from './zapiClient.js';
+import { sendButtonActions, sendImageMessage, sendTextMessage } from './zapiClient.js';
 
 const sessionStore = new Map();
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
@@ -79,6 +79,29 @@ const friendlyIntro = () =>
     '3) Eu devolvo a versão editada e você pode pedir variações',
   ].join('\n');
 
+const sendMenuButtons = async (phone, replyTo) => {
+  const buttons = [
+    { text: 'Enviar foto' },
+    { text: 'Ideias de edição' },
+    { text: 'Ver carros/luxo' },
+  ];
+
+  try {
+    await sendButtonActions(
+      phone,
+      'Escolha uma opção rápida ou mande sua mensagem:',
+      buttons
+    );
+  } catch (error) {
+    console.error('Falha ao enviar botões', error);
+    await sendTextMessage(
+      phone,
+      'Você pode: 1) Enviar foto 2) Pedir ideias 3) Pedir veículo/luxo.',
+      { messageId: replyTo }
+    );
+  }
+};
+
 const processEdit = async ({ phone, prompt, replyTo }) => {
   const session = sessionStore.get(phone);
   if (!session) {
@@ -131,7 +154,18 @@ export const handleZapiWebhook = async (payload) => {
   const prompt = extractPrompt(payload);
   const replyTo = payload?.messageId || undefined;
   const hasImage = Boolean(payload?.image?.imageUrl);
+  const hasAudio = Boolean(payload?.audio?.audioUrl);
   const hasSession = sessionStore.has(phone);
+
+  if (hasAudio) {
+    await sendTextMessage(
+      phone,
+      'Recebi seu áudio! Para editar a foto, me mande em texto o que você quer que eu faça ou envie uma foto nova.',
+      { messageId: replyTo }
+    );
+    await sendMenuButtons(phone, replyTo);
+    return;
+  }
 
   if (hasImage) {
     try {
@@ -164,31 +198,35 @@ export const handleZapiWebhook = async (payload) => {
         { messageId: replyTo }
       );
     }
-    return;
-  }
-
-  if (prompt) {
-    if (isGreetingOrHelp(prompt) && !hasSession) {
-      await sendTextMessage(phone, friendlyIntro(), { messageId: replyTo });
+      await sendMenuButtons(phone, replyTo);
       return;
     }
 
-    if (!hasSession) {
-      await sendTextMessage(
-        phone,
-        `${friendlyIntro()}\n\nPode mandar a foto aqui mesmo e depois o que deseja mudar.`,
-        { messageId: replyTo }
-      );
+    if (prompt) {
+      if (isGreetingOrHelp(prompt) && !hasSession) {
+        await sendTextMessage(phone, friendlyIntro(), { messageId: replyTo });
+        await sendMenuButtons(phone, replyTo);
+        return;
+      }
+
+      if (!hasSession) {
+        await sendTextMessage(
+          phone,
+          `${friendlyIntro()}\n\nPode mandar a foto aqui mesmo e depois o que deseja mudar.`,
+          { messageId: replyTo }
+        );
+        await sendMenuButtons(phone, replyTo);
+        return;
+      }
+
+      await processEdit({ phone, prompt, replyTo });
       return;
     }
-
-    await processEdit({ phone, prompt, replyTo });
-    return;
-  }
 
   await sendTextMessage(
     phone,
     `${friendlyIntro()}\n\nEstou pronta para receber sua foto 😉`,
     { messageId: replyTo }
   );
+  await sendMenuButtons(phone, replyTo);
 };
