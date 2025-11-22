@@ -1,6 +1,8 @@
 import { generateEditedImageFromBuffer } from './geminiNodeService.js';
-import { sendButtonActions, sendButtonList, sendImageMessage, sendTextMessage } from './zapiClient.js';
+import { sendImageMessage, sendTextMessage } from './zapiClient.js';
 import * as ResponseManager from './responseManager.js';
+import * as UserService from './userService.js';
+import * as WooviService from './wooviService.js';
 
 const sessionStore = new Map();
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
@@ -47,25 +49,22 @@ const normalizePhone = (payload) => {
 const extractPrompt = (payload) => {
   const text = payload?.text?.message || '';
   const caption = payload?.image?.caption || '';
-  // Also check for button replies
   const buttonReply = payload?.buttonReply?.id || payload?.listReply?.id || '';
 
   return (caption || text || buttonReply || '').trim();
 };
 
-const getHotspot = () => ({ x: 512, y: 512 }); // Centro padrão
+const getHotspot = () => ({ x: 512, y: 512 });
 
 const updateSession = (phone, newBuffer, mimeType) => {
   const session = sessionStore.get(phone);
   if (!session) return;
 
-  // Add current state to history before updating
   if (session.currentBuffer) {
     session.history.push({
       buffer: session.currentBuffer,
       mimeType: session.currentMimeType
     });
-    // Limit history to last 5 states to save memory
     if (session.history.length > 5) session.history.shift();
   }
 
@@ -91,13 +90,35 @@ const resetSession = (phone) => {
   const session = sessionStore.get(phone);
   if (!session) return false;
 
-  // Reset to original
   session.currentBuffer = session.originalBuffer;
   session.currentMimeType = session.originalMimeType;
   session.history = [];
   session.updatedAt = Date.now();
   sessionStore.set(phone, session);
   return true;
+};
+
+const handlePaymentRequired = async (phone, replyTo) => {
+  try {
+    await sendTextMessage(phone, ResponseManager.getPaymentRequired(), { messageId: replyTo });
+
+    // Generate Pix Charge
+    // Correlation ID is phone + timestamp to be unique
+    const correlationID = `${phone}-${Date.now()}`;
+    const charge = await WooviService.createCharge(0.99, correlationID);
+
+    if (charge && charge.brCode) {
+      await sendTextMessage(phone, `Copie e cole o código abaixo no seu banco:`, { messageId: replyTo });
+      await sendTextMessage(phone, charge.brCode);
+
+      if (charge.qrCodeImage) {
+        await sendImageMessage(phone, charge.qrCodeImage, 'Ou escaneie este QR Code:', { messageId: replyTo });
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao gerar pagamento:', error);
+    await sendTextMessage(phone, 'Tive um erro ao gerar o pagamento. Tente novamente mais tarde.', { messageId: replyTo });
+  }
 };
 
 const processEdit = async ({ phone, prompt, replyTo }) => {
@@ -107,10 +128,15 @@ const processEdit = async ({ phone, prompt, replyTo }) => {
     return;
   }
 
+  // CHECK CREDITS
+  if (!UserService.hasCredit(phone)) {
+    await handlePaymentRequired(phone, replyTo);
+    return;
+  }
+
   try {
     await sendTextMessage(phone, ResponseManager.getEditingStart(), { messageId: replyTo, delayTyping: 2 });
 
-    // Use CURRENT buffer for iterative editing
     const editedImage = await generateEditedImageFromBuffer(
       session.currentBuffer,
       session.currentMimeType,
@@ -118,11 +144,12 @@ const processEdit = async ({ phone, prompt, replyTo }) => {
       session.hotspot || getHotspot()
     );
 
-    // Convert base64 back to buffer for storage
+    // CONSUME CREDIT ONLY AFTER SUCCESSFUL GENERATION
+    UserService.consumeCredit(phone);
+
     const base64Data = editedImage.replace(/^data:image\/\w+;base64,/, "");
     const newBuffer = Buffer.from(base64Data, 'base64');
 
-    // Update session with new image
     updateSession(phone, newBuffer, session.currentMimeType);
 
     await sendImageMessage(
@@ -131,10 +158,6 @@ const processEdit = async ({ phone, prompt, replyTo }) => {
       ResponseManager.getEditingSuccess(),
       { messageId: replyTo }
     );
-
-    // Send options after image
-    const options = ResponseManager.getEditOptions();
-    await sendButtonActions(phone, options.title, options.buttons);
 
   } catch (error) {
     console.error('Falha ao processar edição', error);
@@ -170,7 +193,6 @@ export const handleZapiWebhook = async (payload) => {
         payload.image.mimeType
       );
 
-      // Initialize new session
       sessionStore.set(phone, {
         originalBuffer: buffer,
         originalMimeType: mimeType,
@@ -181,15 +203,11 @@ export const handleZapiWebhook = async (payload) => {
         updatedAt: Date.now(),
       });
 
-      await sendTextMessage(phone, ResponseManager.getImageReceived(), { messageId: replyTo });
-
       if (prompt) {
-        // If image came with caption, process immediately
+        await sendTextMessage(phone, ResponseManager.getImageReceived(), { messageId: replyTo });
         await processEdit({ phone, prompt, replyTo });
       } else {
-        // Otherwise show menu
-        const menu = ResponseManager.getMenuOptions();
-        await sendButtonList(phone, menu.title, menu.buttons);
+        await sendTextMessage(phone, ResponseManager.getImageReceived(), { messageId: replyTo });
       }
     } catch (error) {
       console.error('Erro ao baixar imagem', error);
@@ -206,8 +224,7 @@ export const handleZapiWebhook = async (payload) => {
   if (prompt) {
     const lowerPrompt = prompt.toLowerCase();
 
-    // 1. Check for Special Commands
-    if (lowerPrompt === 'undo' || lowerPrompt === 'desfazer') {
+    if (['undo', 'desfazer', 'voltar'].includes(lowerPrompt)) {
       if (undoLastEdit(phone)) {
         const session = sessionStore.get(phone);
         const dataUrl = `data:${session.currentMimeType};base64,${session.currentBuffer.toString('base64')}`;
@@ -218,7 +235,7 @@ export const handleZapiWebhook = async (payload) => {
       return;
     }
 
-    if (lowerPrompt === 'reset' || lowerPrompt === 'reiniciar' || lowerPrompt === 'nova foto') {
+    if (['reset', 'reiniciar', 'original', 'começar de novo'].includes(lowerPrompt)) {
       if (resetSession(phone)) {
         const session = sessionStore.get(phone);
         const dataUrl = `data:${session.currentMimeType};base64,${session.currentBuffer.toString('base64')}`;
@@ -229,29 +246,29 @@ export const handleZapiWebhook = async (payload) => {
       return;
     }
 
-    if (lowerPrompt === 'help' || lowerPrompt === 'ajuda' || lowerPrompt === 'menu') {
+    if (['help', 'ajuda', 'menu', 'opcoes', 'opções'].includes(lowerPrompt)) {
       await sendTextMessage(phone, ResponseManager.getHelp(), { messageId: replyTo });
+      const status = UserService.getStatus(phone);
+      await sendTextMessage(phone, ResponseManager.getCreditStatus(status.credits, status.freeRemaining));
       return;
     }
 
-    if (lowerPrompt === 'ideas' || lowerPrompt === 'ideias') {
-      await sendTextMessage(phone, 'Tente pedir:\n- "Cyberpunk"\n- "Terno profissional"\n- "Fundo de praia"\n- "Estilo desenho 3D"', { messageId: replyTo });
+    if (['saldo', 'creditos', 'créditos'].includes(lowerPrompt)) {
+      const status = UserService.getStatus(phone);
+      await sendTextMessage(phone, ResponseManager.getCreditStatus(status.credits, status.freeRemaining));
       return;
     }
 
-    // 2. Handle Greetings (only if no session or explicit greeting)
-    const isGreeting = ['oi', 'ola', 'olá', 'hey'].some(w => lowerPrompt.includes(w));
+    const isGreeting = ['oi', 'ola', 'olá', 'hey', 'bom dia', 'boa tarde', 'boa noite'].some(w => lowerPrompt.includes(w));
     if (isGreeting && !hasSession) {
       await sendTextMessage(phone, ResponseManager.getGreeting(), { messageId: replyTo });
       return;
     }
 
-    // 3. Handle Edit Request
     if (hasSession) {
       await processEdit({ phone, prompt, replyTo });
     } else {
-      // No session, user sent text
-      await sendTextMessage(phone, ResponseManager.getGreeting(), { messageId: replyTo });
+      await sendTextMessage(phone, ResponseManager.getNoSessionMessage(), { messageId: replyTo });
     }
   }
 };
