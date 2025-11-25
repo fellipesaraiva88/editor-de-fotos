@@ -10,24 +10,50 @@ interface WizardOverlayProps {
     generateImage: (location: string, outfit: string) => Promise<string>;
 }
 
-type WizardStep = 'location' | 'outfit' | 'generating' | 'complete';
+type WizardStep = 'location' | 'transition' | 'outfit' | 'generating' | 'complete';
 
 const locationSuggestions = [
-    { emoji: '🏝️', label: 'Praia paradisíaca', prompt: 'on a beautiful tropical beach with crystal clear water and palm trees' },
-    { emoji: '🌆', label: 'Dubai', prompt: 'in Dubai with the Burj Khalifa and luxury buildings in the background' },
-    { emoji: '🗼', label: 'Paris', prompt: 'in Paris with the Eiffel Tower in the background' },
-    { emoji: '🏔️', label: 'Montanhas', prompt: 'in the mountains with snow-capped peaks and beautiful nature' },
-    { emoji: '🌃', label: 'Nova York', prompt: 'in New York City with Times Square lights at night' },
-    { emoji: '🏎️', label: 'Com Ferrari', prompt: 'next to a red Ferrari in a luxurious setting' },
+    // Natureza & Aventura
+    { emoji: '🏖️', label: 'Praia Tropical', prompt: 'numa praia tropical paradisíaca com água cristalina e coqueiros' },
+    { emoji: '🏔️', label: 'Montanhas', prompt: 'nas montanhas com picos nevados e paisagem deslumbrante ao nascer do sol' },
+    { emoji: '🌲', label: 'Floresta', prompt: 'numa floresta verde exuberante com raios de sol entre as árvores' },
+
+    // Urbano & Lifestyle
+    { emoji: '☕', label: 'Café Charmoso', prompt: 'num café ao ar livre charmoso com iluminação aconchegante' },
+    { emoji: '🌆', label: 'Terraço Urbano', prompt: 'num terraço moderno ao entardecer com skyline da cidade ao fundo' },
+
+    // Viagens & Cultura
+    { emoji: '🇫🇷', label: 'Paris', prompt: 'em Paris com a Torre Eiffel iluminada ao fundo' },
+    { emoji: '🇯🇵', label: 'Tóquio', prompt: 'em Tóquio à noite com luzes neon e estética moderna' },
+    { emoji: '🗽', label: 'Nova York', prompt: 'em Nova York com a Times Square iluminada à noite' },
+
+    // Luxo & Aspiracional
+    { emoji: '🏎️', label: 'Com Ferrari', prompt: 'ao lado de uma Ferrari vermelha em cenário luxuoso' },
+    { emoji: '✈️', label: 'Jato Particular', prompt: 'em frente a um jato particular em aeroporto privado' },
+    { emoji: '🛥️', label: 'Iate', prompt: 'num iate de luxo com mar azul turquesa ao fundo' },
+    { emoji: '🏰', label: 'Castelo', prompt: 'num castelo europeu histórico com arquitetura majestosa' },
 ];
 
 const outfitSuggestions = [
-    { emoji: '👔', label: 'Terno elegante', prompt: 'wearing an elegant black suit with a tie' },
-    { emoji: '👗', label: 'Vestido de gala', prompt: 'wearing a stunning evening gown' },
-    { emoji: '🏖️', label: 'Roupa de praia', prompt: 'wearing stylish beach wear' },
-    { emoji: '🎽', label: 'Casual chique', prompt: 'wearing casual chic designer clothes' },
-    { emoji: '💼', label: 'Executivo', prompt: 'wearing professional business attire' },
-    { emoji: '👑', label: 'Luxo', prompt: 'wearing luxury designer brands with accessories' },
+    // Casual
+    { emoji: '👕', label: 'Casual Moderno', prompt: 'usando roupas casuais modernas e estilosas' },
+    { emoji: '🌴', label: 'Verão Leve', prompt: 'usando roupa leve de verão, estilo praia sofisticado' },
+    { emoji: '🧢', label: 'Streetwear', prompt: 'usando streetwear estiloso com tênis de marca' },
+
+    // Formal Masculino
+    { emoji: '🤵', label: 'Terno Clássico', prompt: 'usando um terno elegante bem cortado' },
+    { emoji: '👔', label: 'Social Casual', prompt: 'usando blazer sem gravata, estilo smart casual' },
+
+    // Elegante Feminino
+    { emoji: '👗', label: 'Vestido Elegante', prompt: 'usando um vestido elegante e sofisticado' },
+    { emoji: '💃', label: 'Coquetel', prompt: 'usando vestido de coquetel com acessórios refinados' },
+    { emoji: '👚', label: 'Casual Chique', prompt: 'usando look casual chique com peças de grife' },
+
+    // Temáticos
+    { emoji: '✨', label: 'Gala/Red Carpet', prompt: 'usando traje de gala impecável, estilo red carpet' },
+    { emoji: '🧥', label: 'Inverno Estiloso', prompt: 'usando casaco elegante de inverno com cachecol' },
+    { emoji: '🏍️', label: 'Rock/Leather', prompt: 'usando jaqueta de couro preta, estilo rockstar' },
+    { emoji: '👑', label: 'Alta Costura', prompt: 'usando alta costura com joias e acessórios de luxo' },
 ];
 
 export const WizardOverlay: React.FC<WizardOverlayProps> = ({
@@ -39,14 +65,14 @@ export const WizardOverlay: React.FC<WizardOverlayProps> = ({
     const [step, setStep] = useState<WizardStep>('location');
     const [selectedLocation, setSelectedLocation] = useState('');
     const [selectedOutfit, setSelectedOutfit] = useState('');
-    const [customInput, setCustomInput] = useState('');
     const [isVisible, setIsVisible] = useState(true);
 
     const handleLocationSelect = useCallback((prompt: string) => {
         setSelectedLocation(prompt);
+        setStep('transition');
         setTimeout(() => {
             setStep('outfit');
-        }, 300);
+        }, 1500);
     }, []);
 
     const handleOutfitSelect = useCallback(async (prompt: string) => {
@@ -70,6 +96,11 @@ export const WizardOverlay: React.FC<WizardOverlayProps> = ({
         }
     }, [step, handleLocationSelect, handleOutfitSelect]);
 
+    const handleBackToLocation = useCallback(() => {
+        setStep('location');
+        setSelectedLocation('');
+    }, []);
+
     if (!isVisible) return null;
 
     return (
@@ -83,32 +114,46 @@ export const WizardOverlay: React.FC<WizardOverlayProps> = ({
             <div className="wizard-progress">
                 <div
                     className="wizard-progress-bar"
-                    style={{ width: step === 'location' ? '33%' : step === 'outfit' ? '66%' : '100%' }}
+                    style={{ width: step === 'location' ? '33%' : step === 'transition' ? '50%' : step === 'outfit' ? '66%' : '100%' }}
                 />
             </div>
 
             <div className="wizard-content">
                 {step === 'location' && (
                     <div className="wizard-step" key="location">
-                        <WizardQuestion text="Onde você gostaria de estar?" />
+                        <p className="wizard-step-indicator">Etapa 1 de 2</p>
+                        <WizardQuestion text="Para onde a gente te leva hoje?" />
+                        <p className="wizard-subtitle">Escolha o cenário dos seus sonhos</p>
                         <SuggestionChips
                             suggestions={locationSuggestions}
                             onSelect={handleLocationSelect}
                             onCustomSubmit={handleCustomSubmit}
-                            placeholder="Ou digite um lugar..."
+                            placeholder="Ou digite um lugar dos sonhos..."
                         />
+                    </div>
+                )}
+
+                {step === 'transition' && (
+                    <div className="wizard-step wizard-transition" key="transition">
+                        <div className="transition-icon">✨</div>
+                        <p className="transition-text">Perfeito! Agora vamos completar o visual...</p>
                     </div>
                 )}
 
                 {step === 'outfit' && (
                     <div className="wizard-step" key="outfit">
-                        <WizardQuestion text="Como quer estar vestido?" />
+                        <p className="wizard-step-indicator">Etapa 2 de 2</p>
+                        <WizardQuestion text="Com que estilo você quer arrasar?" />
+                        <p className="wizard-subtitle">Vista-se para impressionar</p>
                         <SuggestionChips
                             suggestions={outfitSuggestions}
                             onSelect={handleOutfitSelect}
                             onCustomSubmit={handleCustomSubmit}
-                            placeholder="Ou descreva a roupa..."
+                            placeholder="Ou descreva o look perfeito..."
                         />
+                        <button className="wizard-back-button" onClick={handleBackToLocation}>
+                            ← Mudar localização
+                        </button>
                     </div>
                 )}
 
@@ -126,7 +171,7 @@ export const WizardOverlay: React.FC<WizardOverlayProps> = ({
                     left: 0;
                     right: 0;
                     bottom: 0;
-                    background: rgba(0, 0, 0, 0.92);
+                    background: rgba(0, 0, 0, 0.95);
                     display: flex;
                     flex-direction: column;
                     align-items: center;
@@ -176,19 +221,19 @@ export const WizardOverlay: React.FC<WizardOverlayProps> = ({
                     top: 0;
                     left: 0;
                     right: 0;
-                    height: 3px;
+                    height: 4px;
                     background: rgba(255, 255, 255, 0.1);
                 }
 
                 .wizard-progress-bar {
                     height: 100%;
-                    background: #10B981;
+                    background: linear-gradient(90deg, #10B981, #3B82F6);
                     transition: width 0.4s ease-out;
                 }
 
                 .wizard-content {
                     width: 100%;
-                    max-width: 600px;
+                    max-width: 650px;
                     padding: 12px;
                     display: flex;
                     flex-direction: column;
@@ -207,6 +252,86 @@ export const WizardOverlay: React.FC<WizardOverlayProps> = ({
                     flex-direction: column;
                     align-items: center;
                     animation: slideUp 0.4s ease-out;
+                }
+
+                .wizard-step-indicator {
+                    font-size: 11px;
+                    color: rgba(255, 255, 255, 0.5);
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin-bottom: 8px;
+                }
+
+                @media (min-width: 768px) {
+                    .wizard-step-indicator {
+                        font-size: 12px;
+                        margin-bottom: 12px;
+                    }
+                }
+
+                .wizard-subtitle {
+                    font-size: 13px;
+                    color: rgba(255, 255, 255, 0.6);
+                    margin-top: -8px;
+                    margin-bottom: 20px;
+                }
+
+                @media (min-width: 768px) {
+                    .wizard-subtitle {
+                        font-size: 14px;
+                        margin-bottom: 28px;
+                    }
+                }
+
+                .wizard-back-button {
+                    margin-top: 20px;
+                    padding: 10px 20px;
+                    background: transparent;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 20px;
+                    color: rgba(255, 255, 255, 0.7);
+                    font-size: 13px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .wizard-back-button:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: rgba(255, 255, 255, 0.4);
+                    color: white;
+                }
+
+                .wizard-transition {
+                    justify-content: center;
+                    min-height: 200px;
+                }
+
+                .transition-icon {
+                    font-size: 48px;
+                    margin-bottom: 16px;
+                    animation: pulse 1s ease-in-out infinite;
+                }
+
+                .transition-text {
+                    font-size: 18px;
+                    color: white;
+                    font-weight: 500;
+                    animation: fadeIn 0.5s ease-out;
+                }
+
+                @media (min-width: 768px) {
+                    .transition-icon {
+                        font-size: 64px;
+                        margin-bottom: 24px;
+                    }
+                    .transition-text {
+                        font-size: 24px;
+                    }
+                }
+
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.1); }
                 }
 
                 @keyframes slideUp {

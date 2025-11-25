@@ -42,8 +42,18 @@ export const getUser = (phone) => {
             phone,
             credits: 0,
             freeEditsUsed: 0,
+            totalEdits: 0,
+            totalPurchases: 0,
+            lastPurchaseAt: null,
             createdAt: Date.now()
         };
+        saveDb(db);
+    }
+    // Migrate old users that don't have new fields
+    if (db[phone].totalEdits === undefined) {
+        db[phone].totalEdits = db[phone].freeEditsUsed || 0;
+        db[phone].totalPurchases = 0;
+        db[phone].lastPurchaseAt = null;
         saveDb(db);
     }
     return db[phone];
@@ -67,6 +77,9 @@ export const consumeCredit = (phone) => {
         return false; // Should not happen if checked before
     }
 
+    // Track total edits
+    user.totalEdits = (user.totalEdits || 0) + 1;
+
     db[phone] = user;
     saveDb(db);
     return true;
@@ -81,6 +94,9 @@ export const addCredits = (phone, amount) => {
     }
 
     db[phone].credits = (db[phone].credits || 0) + amount;
+    db[phone].totalPurchases = (db[phone].totalPurchases || 0) + 1;
+    db[phone].lastPurchaseAt = Date.now();
+
     saveDb(db);
     return db[phone].credits;
 };
@@ -91,6 +107,9 @@ export const getStatus = (phone) => {
     return {
         credits: user.credits,
         freeRemaining,
-        canEdit: user.credits > 0 || freeRemaining > 0
+        canEdit: user.credits > 0 || freeRemaining > 0,
+        totalEdits: user.totalEdits || 0,
+        totalPurchases: user.totalPurchases || 0,
+        lastPurchaseAt: user.lastPurchaseAt
     };
 };

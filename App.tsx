@@ -35,7 +35,7 @@ const dataURLtoFile = (dataurl: string, filename: string): File => {
 }
 
 type Tab = 'retouch' | 'adjust' | 'filters' | 'crop';
-type StudioTab = 'places' | 'outfits' | 'vehicles';
+type StudioTab = 'places' | 'outfits' | 'vehicles' | 'styles';
 
 const App: React.FC = () => {
   const [history, setHistory] = useState<File[]>([]);
@@ -63,34 +63,62 @@ const App: React.FC = () => {
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
 
-  // --- DISRUPTIVE VISUAL STUDIO ASSETS ---
-  
+  // --- VISUAL STUDIO ASSETS - DIVERSIFIED CATALOG ---
+
   const studioAssets = {
     places: [
-        { id: 'paris', emoji: '🇫🇷', label: 'Paris Café', prompt: 'Transport subject to a chic Parisian cafe outdoor seating, Eiffel Tower visible in distance, soft morning light.' },
-        { id: 'ny', emoji: '🗽', label: 'NY Rooftop', prompt: 'Place subject on a luxury NYC penthouse rooftop at dusk, Empire State lights in background, cocktail ambiance.' },
-        { id: 'yacht', emoji: '🛥️', label: 'Monaco Yacht', prompt: 'Place subject on a superyacht in Monaco, turquoise water, holding champagne, golden hour sunset.' },
-        { id: 'santorini', emoji: '🇬🇷', label: 'Santorini', prompt: 'Place subject in Oia, Santorini, white architecture, blue domes, bright sunny day, vacation vibe.' },
-        { id: 'tokyo', emoji: '🇯🇵', label: 'Tokyo Neon', prompt: 'Place subject in Shibuya Crossing at night, rain reflections, neon signs, cyberpunk aesthetic.' },
-        { id: 'aspen', emoji: '❄️', label: 'Aspen Snow', prompt: 'Place subject in Aspen ski resort, snowy mountains background, winter luxury atmosphere.' },
-        { id: 'desert', emoji: '🏜️', label: 'Dubai Desert', prompt: 'Place subject in Dubai desert dunes at sunset, warm golden lighting, luxury travel vibe.' },
-        { id: 'jet', emoji: '🛩️', label: 'Private Jet', prompt: 'Place subject on the tarmac steps of a Gulfstream G650 private jet, luxury luggage, confident pose.' },
+        // Natureza & Aventura
+        { id: 'beach', emoji: '🏖️', label: 'Praia Tropical', prompt: 'Place subject on a pristine tropical beach, turquoise water, palm trees, warm golden hour light, vacation atmosphere.' },
+        { id: 'mountain', emoji: '🏔️', label: 'Montanhas', prompt: 'Place subject on mountain peak at sunrise, dramatic clouds below, sense of achievement and adventure.' },
+        { id: 'forest', emoji: '🌲', label: 'Floresta', prompt: 'Place subject in lush green forest, sunbeams through trees, natural peaceful atmosphere, morning mist.' },
+        // Urbano Casual
+        { id: 'cafe', emoji: '☕', label: 'Café Charmoso', prompt: 'Place subject at cozy outdoor cafe terrace, warm lighting, casual urban lifestyle atmosphere.' },
+        { id: 'rooftop', emoji: '🌆', label: 'Terraço Urbano', prompt: 'Place subject on modern rooftop terrace at dusk, city skyline background, relaxed evening vibe.' },
+        // Viagens & Cultura
+        { id: 'paris', emoji: '🇫🇷', label: 'Paris', prompt: 'Transport subject to Parisian boulevard, Eiffel Tower in distance, classic European architecture, soft romantic light.' },
+        { id: 'tokyo', emoji: '🇯🇵', label: 'Tóquio', prompt: 'Place subject in Tokyo at night, neon signs, modern Asian aesthetic, vibrant city energy.' },
+        { id: 'santorini', emoji: '🇬🇷', label: 'Santorini', prompt: 'Place subject in Santorini, white architecture, blue domes, bright Mediterranean sunlight, vacation vibe.' },
+        { id: 'ny', emoji: '🗽', label: 'Nova York', prompt: 'Place subject in New York City, iconic buildings background, dynamic urban atmosphere, modern lifestyle.' },
+        // Luxo & Aspiracional
+        { id: 'yacht', emoji: '🛥️', label: 'Iate', prompt: 'Place subject on a superyacht, turquoise water, golden hour sunset, luxury atmosphere.' },
+        { id: 'jet', emoji: '✈️', label: 'Jato Particular', prompt: 'Place subject on the tarmac steps of a private jet, luxury luggage, confident pose.' },
+        { id: 'desert', emoji: '🏜️', label: 'Deserto', prompt: 'Place subject in desert dunes at sunset, warm golden lighting, adventure travel vibe.' },
     ],
     outfits: [
-        { id: 'suit', emoji: '🤵', label: 'Old Money', prompt: 'Change outfit to a tailored Italian navy blue suit, white crisp shirt, no tie, expensive watch, Old Money aesthetic.' },
-        { id: 'street', emoji: '🧢', label: 'Streetwear', prompt: 'Change outfit to high-end streetwear: oversized Balenciaga hoodie, cargo pants, limited edition sneakers.' },
-        { id: 'summer', emoji: '👕', label: 'Linen Summer', prompt: 'Change outfit to a white linen shirt unbuttoned, beige chino shorts, loafers, sunglasses, Riviera style.' },
-        { id: 'gala', emoji: '✨', label: 'Red Carpet', prompt: 'Change outfit to a Black Tie tuxedo (or evening gown), flawless grooming, paparazzi flash lighting.' },
-        { id: 'leather', emoji: '🧥', label: 'Leather', prompt: 'Change outfit to a black leather jacket, white t-shirt, dark denim, boots, edgy rockstar look.' },
-        { id: 'polo', emoji: '🏇', label: 'Polo Club', prompt: 'Change outfit to a Ralph Lauren polo shirt, white pants, sweater over shoulders, preppy style.' },
+        // Casual
+        { id: 'casual', emoji: '👕', label: 'Casual Moderno', prompt: 'Change outfit to modern casual: fitted henley or polo shirt, dark jeans, clean sneakers, minimalist watch.' },
+        { id: 'street', emoji: '🧢', label: 'Streetwear', prompt: 'Change outfit to streetwear style: graphic hoodie or oversized tee, joggers, fresh sneakers, urban aesthetic.' },
+        { id: 'summer', emoji: '🌴', label: 'Verão Leve', prompt: 'Change outfit to summer casual: linen shirt, light shorts, loafers, sunglasses, relaxed beach-ready style.' },
+        // Formal
+        { id: 'suit', emoji: '🤵', label: 'Terno Clássico', prompt: 'Change outfit to tailored navy suit, crisp white shirt, subtle tie optional, polished dress shoes, professional elegance.' },
+        { id: 'smart', emoji: '👔', label: 'Social Casual', prompt: 'Change outfit to smart casual: blazer, no tie, chino pants, leather shoes, refined yet relaxed style.' },
+        { id: 'gala', emoji: '✨', label: 'Black Tie', prompt: 'Change outfit to elegant black tie tuxedo or evening gown, polished shoes, sophisticated formal occasion look.' },
+        // Feminino
+        { id: 'dress', emoji: '👗', label: 'Vestido Elegante', prompt: 'Change outfit to elegant cocktail dress, heels, statement jewelry, sophisticated style.' },
+        { id: 'chic', emoji: '👚', label: 'Casual Chique', prompt: 'Change outfit to casual chic: flowy blouse, fitted jeans, ankle boots, minimal jewelry, effortless style.' },
+        { id: 'boho', emoji: '🌸', label: 'Boho', prompt: 'Change outfit to bohemian style: flowy maxi dress, layered accessories, sandals, natural relaxed aesthetic.' },
+        // Temáticos
+        { id: 'winter', emoji: '🧥', label: 'Inverno', prompt: 'Change outfit to stylish winter wear: wool coat, scarf, boots, layered warm clothing, cozy seasonal style.' },
+        { id: 'leather', emoji: '🏍️', label: 'Rock', prompt: 'Change outfit to edgy rock style: leather jacket, dark jeans, boots, rebellious confident aesthetic.' },
+        { id: 'luxury', emoji: '👑', label: 'Alta Costura', prompt: 'Change outfit to luxury designer brands: high fashion pieces, refined accessories, runway-worthy style.' },
     ],
     vehicles: [
-        { id: 'ferrari', emoji: '🐎', label: 'Ferrari 458', prompt: 'Place subject leaning on a Red Ferrari 458 Italia. Sunset light, Italian coast background. Realistic car reflections.' },
-        { id: 'porsche', emoji: '🏁', label: 'Vintage 911', prompt: 'Place subject driving a classic Silver Porsche 911 convertible. Coastal road, wind in hair, dynamic blur.' },
-        { id: 'lambo', emoji: '🐂', label: 'Lambo Huracán', prompt: 'Place subject next to a lime green Lamborghini Huracán at night. City lights, wet pavement reflections.' },
-        { id: 'gwagon', emoji: '🚙', label: 'G-Wagon', prompt: 'Place subject walking away from a Matte Black Mercedes G-Wagon. Rodeo Drive background, luxury shopping bags.' },
-        { id: 'rolls', emoji: '👑', label: 'Rolls Royce', prompt: 'Place subject inside a Rolls Royce Phantom back seat. Starlight headliner, warm interior light, glass in hand.' },
-        { id: 'bugatti', emoji: '🔵', label: 'Bugatti', prompt: 'Place subject standing next to a Bugatti Chiron at a casino entrance. Tuxedo/Gala attire, high contrast luxury.' },
+        { id: 'sports', emoji: '🏎️', label: 'Esportivo', prompt: 'Place subject next to sleek modern sports car, polished finish, urban or coastal background, aspirational lifestyle.' },
+        { id: 'vintage', emoji: '🚗', label: 'Vintage', prompt: 'Place subject with classic vintage car, retro aesthetic, nostalgic vibe, timeless style.' },
+        { id: 'moto', emoji: '🏍️', label: 'Moto', prompt: 'Place subject with motorcycle, adventurous spirit, freedom vibe, dynamic rebel aesthetic.' },
+        { id: 'convertible', emoji: '🏁', label: 'Conversível', prompt: 'Place subject in convertible with top down, wind in hair, coastal road, carefree driving experience.' },
+        { id: 'suv', emoji: '🚙', label: 'SUV Luxo', prompt: 'Place subject with modern luxury SUV, adventure ready, outdoor lifestyle, versatile vehicle aesthetic.' },
+        { id: 'bike', emoji: '🚴', label: 'Bicicleta', prompt: 'Place subject with stylish bicycle, urban lifestyle, eco-friendly active vibe, modern city backdrop.' },
+    ],
+    styles: [
+        { id: 'vintage', emoji: '📷', label: 'Vintage Film', prompt: 'Apply vintage film photography aesthetic: grain texture, warm faded colors, nostalgic 70s-80s film look, subtle vignette.' },
+        { id: 'noir', emoji: '🎬', label: 'Film Noir', prompt: 'Transform to dramatic film noir style: high contrast black and white, cinematic shadows, mysterious moody lighting, 1940s aesthetic.' },
+        { id: 'golden', emoji: '✨', label: 'Hora Dourada', prompt: 'Enhance with golden hour magic: warm golden sunlight, soft glow, dreamy atmospheric haze, romantic lighting.' },
+        { id: 'cyberpunk', emoji: '🌃', label: 'Cyberpunk', prompt: 'Apply cyberpunk aesthetic: neon lights, rain reflections, futuristic urban atmosphere, electric blue and pink tones.' },
+        { id: 'renaissance', emoji: '🎨', label: 'Renascença', prompt: 'Transform to Renaissance painting style: classical oil painting technique, dramatic chiaroscuro lighting, museum-worthy artistic aesthetic.' },
+        { id: 'vogue', emoji: '📸', label: 'Editorial', prompt: 'Apply high-fashion editorial photography style: dramatic lighting, bold composition, Vogue magazine aesthetic, professional studio quality.' },
+        { id: 'dreamy', emoji: '☁️', label: 'Onírico', prompt: 'Create dreamy ethereal atmosphere: soft focus, pastel colors, magical light rays, fairy-tale fantasy aesthetic.' },
+        { id: 'dramatic', emoji: '⚡', label: 'Dramático', prompt: 'Apply dramatic cinematic style: high contrast, moody atmosphere, powerful lighting, emotional intensity, movie poster aesthetic.' },
     ]
   };
 
@@ -384,15 +412,16 @@ const App: React.FC = () => {
             {activeTab === 'retouch' && (
                 <div className="flex flex-col gap-6 animate-fade-in">
                     
-                    {/* SMART AI ANALYSIS SECTION - NEW */}
+                    {/* SMART AI ANALYSIS SECTION */}
                     <div className="relative">
-                         <div className="flex items-center justify-between mb-2">
+                         <div className="flex items-center justify-between mb-1">
                              <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 font-bold text-sm uppercase tracking-wide flex items-center gap-2">
-                                <MagicWandIcon className="w-3 h-3 text-pink-400"/> IA Insights
+                                <MagicWandIcon className="w-3 h-3 text-pink-400"/> Sugestões Inteligentes
                              </h2>
                              {isAnalyzing && <span className="text-[10px] text-neutral-400 animate-pulse">Analisando...</span>}
                         </div>
-                        
+                        <p className="text-neutral-500 text-[10px] md:text-xs mb-3">Nossa IA analisou sua foto e criou edições personalizadas</p>
+
                         {isAnalyzing ? (
                             <div className="grid grid-cols-2 gap-2">
                                 {[1,2,3,4].map(i => (
@@ -413,8 +442,10 @@ const App: React.FC = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="p-3 rounded-lg border border-dashed border-neutral-700 text-neutral-500 text-xs text-center">
-                                Nenhuma sugestão gerada.
+                            <div className="p-3 rounded-lg border border-dashed border-neutral-700 text-neutral-400 text-xs text-center flex flex-col items-center gap-2">
+                                <MagicWandIcon className="w-5 h-5 opacity-50"/>
+                                <p className="font-semibold">Análise automática em breve</p>
+                                <p className="text-[10px] text-neutral-500">Ou escolha manualmente no catálogo abaixo</p>
                             </div>
                         )}
                     </div>
@@ -436,8 +467,12 @@ const App: React.FC = () => {
                             <button onClick={() => setStudioTab('outfits')} className={`px-3 md:px-4 py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all whitespace-nowrap ${studioTab === 'outfits' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}>
                                 👕 Roupas
                             </button>
+                            <button onClick={() => setStudioTab('styles')} className={`px-3 md:px-4 py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all whitespace-nowrap flex items-center gap-1 ${studioTab === 'styles' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}>
+                                🎨 Estilos
+                                <span className="text-[8px] bg-gradient-to-r from-pink-500 to-purple-500 text-white px-1.5 py-0.5 rounded-full">NOVO</span>
+                            </button>
                             <button onClick={() => setStudioTab('vehicles')} className={`px-3 md:px-4 py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all whitespace-nowrap ${studioTab === 'vehicles' ? 'bg-white text-black border-white' : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:border-neutral-500'}`}>
-                                🏎️ Veículos
+                                🚗 Veículos
                             </button>
                         </div>
 
